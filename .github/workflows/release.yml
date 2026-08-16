@@ -53,20 +53,10 @@ jobs:
       - name: Check
         run: npm run check
 
-      # First run only: without a tag to measure from, semantic-release would
-      # start again at 1.0.0 and regress plugins already past it. Seeding the tag
-      # at HEAD means this run establishes the baseline and releases nothing.
-      - name: Seed the baseline tag
-        run: |
-          if [ -z "$(git tag -l 'v*')" ]; then
-            BASELINE="v$(node -p "require('./package.json').version")"
-            echo "No tags yet — seeding $BASELINE at HEAD; no release this run."
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git tag -a "$BASELINE" -m "Baseline for automated releases"
-            git push origin "$BASELINE"
-          fi
-
+      # v1.1.0 is tagged by hand as the baseline, marking the last state of the
+      # repository under hand-managed versions. Every tag after it comes from
+      # here. Without a tag to measure from, semantic-release would start again
+      # at 1.0.0 and regress plugins already past it.
       - name: Release
         run: npx semantic-release
         env:
