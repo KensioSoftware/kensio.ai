@@ -188,7 +188,9 @@ it("keeps serving the secret after it is deleted", async () => {
   const first = await config.databasePassword();
 
   // When the underlying secret goes away.
-  await simAws.secretsManager().deleteSecret({ SecretId: secretName });
+  await simAws.secretsManager().deleteSecret(
+    new DeleteSecretCommand({ SecretId: secretName }),
+  );
 
   // Then the cached value is still served, without going back to the service.
   expect(await config.databasePassword()).toEqual(first);
