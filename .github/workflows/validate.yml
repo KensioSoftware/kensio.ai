@@ -56,6 +56,12 @@ jobs:
       - name: Check plugin and package versions agree
         run: pnpm check:versions
 
+      # Part of `pnpm check`, so a release would catch it anyway. Running it here
+      # too keeps the promise that a green pull request predicts a green release,
+      # instead of a prose failure surfacing during a tag.
+      - name: Check prose
+        run: pnpm prose
+
       # Packed per directory with npm rather than `pnpm pack -r`, to match how
       # publish-npm.mjs actually publishes, and because `pnpm pack -r` also packs
       # the private root.
