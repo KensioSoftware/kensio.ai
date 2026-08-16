@@ -1,0 +1,29 @@
+{
+  "name": "@kensio/isolated-testing-style",
+  "version": "1.0.0",
+  "description": "An opinionated testing style: real collaborators through simulation instead of stubs, isolation from randomised data instead of setup and teardown, and assertions on behaviour instead of call counts.",
+  "license": "Apache-2.0",
+  "author": "Kensio Software <hugh@kensiosoftware.co.uk>",
+  "homepage": "https://kensio.ai",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KensioSoftware/kensio.ai.git",
+    "directory": "plugins/isolated-testing-style"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "claude-code-plugin",
+    "skill",
+    "kensio",
+    "testing", "vitest", "typescript", "test-style"
+  ],
+  "files": [
+    ".claude-plugin",
+    "skills",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

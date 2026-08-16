@@ -9,9 +9,10 @@ This repository is the canonical source. Each skill is a self-contained plugin t
 can be installed from the Claude Code marketplace, from npm, or (later) as a
 downloadable archive.
 
-> **Status: scaffolding.** The two plugins currently here — `hello-world` and
-> `skill-template` — are examples that validate the structure end to end. Real
-> skills are on the way.
+The first three real skills are a set: `isolated-testing-style` is a way of writing
+tests, and `yulin-aws-simulation` and `part-factory-test-data` cover two Kensio
+packages that serve it. `hello-world` and `skill-template` remain as examples that
+validate the structure end to end.
 
 ## Install
 
@@ -63,8 +64,14 @@ Not available yet.
 
 | Skill | npm | What it does |
 | --- | --- | --- |
+| [`isolated-testing-style`](plugins/isolated-testing-style) | `@kensio/isolated-testing-style` | Real collaborators through simulation, isolation from randomised data, assertions on behaviour. |
+| [`yulin-aws-simulation`](plugins/yulin-aws-simulation) | `@kensio/yulin-aws-simulation` | Testing AWS code with the [Yulin](https://yulinsim.dev/) in-process simulator. |
+| [`part-factory-test-data`](plugins/part-factory-test-data) | `@kensio/part-factory-test-data` | Building test data with [Part Factory](https://partfactory.dev/). |
 | [`hello-world`](plugins/hello-world) | `@kensio/hello-world` | Minimal example that confirms the install path works. |
 | [`skill-template`](plugins/skill-template) | `@kensio/skill-template` | Copy-and-edit starting point for writing a new skill. |
+
+The first three are meant to be read together. `isolated-testing-style` is the
+philosophy, and the other two are tools that serve it.
 
 ## Repository layout
 

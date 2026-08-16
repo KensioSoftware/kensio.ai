@@ -1,0 +1,29 @@
+{
+  "name": "@kensio/yulin-aws-simulation",
+  "version": "1.0.0",
+  "description": "How to test AWS code well with the @kensio/yulin in-process simulator, covering SDK interception, deploying real synthesized CloudFormation templates, and handling what the simulator refuses.",
+  "license": "Apache-2.0",
+  "author": "Kensio Software <hugh@kensiosoftware.co.uk>",
+  "homepage": "https://kensio.ai",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KensioSoftware/kensio.ai.git",
+    "directory": "plugins/yulin-aws-simulation"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "claude-code-plugin",
+    "skill",
+    "kensio",
+    "testing", "aws", "yulin", "cdk", "cloudformation"
+  ],
+  "files": [
+    ".claude-plugin",
+    "skills",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
