@@ -183,12 +183,18 @@ on npmjs.com before it can be published this way.
 #### Bootstrapping a package onto npm
 
 Trusted publishing is configured on a package's settings page on npmjs.com, which means the package
-has to exist before it can be configured. npm has no equivalent of PyPI's pending publishers, so the
-first version of every package is published by hand, from a clean checkout of the release tag:
+has to exist before it can be configured. npm has no equivalent of PyPI's pending publishers, and
+the first version of every package is published by hand.
 
 ```bash
-for plugin in plugins/*/; do npm publish "./$plugin" --access public; done
+git checkout v<version>
+node scripts/set-version.mjs <version>
+npm publish ./plugins/<name> --access public
 ```
+
+`set-version` is the step that is easy to miss. semantic-release tags the commit before it writes
+the version into the manifests. A clean checkout of the tag still carries the previous number, and
+publishing straight from it would put the wrong version on npm.
 
 The `./` prefix is load-bearing. npm reads a bare `plugins/<name>` as the GitHub shorthand
 `owner/repo` and tries to clone it. That first version carries no provenance attestation, because
@@ -205,15 +211,16 @@ Then, for each package, under **Settings → Trusted Publisher** on npmjs.com:
 | Workflow    | `release.yml`    |
 | Environment | `release`        |
 
-A new plugin added later needs the same two steps before its first release, or the release will tag
-successfully and fail at `npm publish`.
+A new plugin added later needs the same two steps before its first release. `publish-npm.mjs`
+detects a package that has never been published, skips it, and prints these commands rather than
+failing the release, so one new plugin cannot strand the ones that published cleanly.
 
 #### Why the release job names an environment
 
 A trusted publisher binds to an owner, a repository and a workflow filename, and not to a ref. On
 its own that would let any run of `release.yml` publish, including a modified copy pushed to a
 branch and started by hand through `workflow_dispatch`. The `release` environment closes that: its
-deployment rule allows `main` only, so a run from any other ref cannot enter it and fails before
+deployment rule allows `main` only. A run from any other ref cannot enter it, and fails before
 reaching `npm publish`. The environment name is itself an OIDC claim, which is why it has to match
 on both sides.
 
