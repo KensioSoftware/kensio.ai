@@ -1,8 +1,8 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "isolated-testing-style",
-  "version": "1.0.0",
-  "description": "An opinionated testing style: real collaborators through simulation instead of stubs, isolation from randomised data instead of setup and teardown, and assertions on behaviour instead of call counts.",
+  "version": "1.1.0",
+  "description": "An opinionated testing style: start from given/when/then, use real collaborators through simulation instead of stubs, take isolation from randomised data instead of shared setup and teardown, and assert behaviour instead of call counts.",
   "author": {
     "name": "Kensio Software",
     "email": "hugh@kensiosoftware.co.uk"
