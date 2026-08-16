@@ -50,7 +50,7 @@ description: <what it does, then when to use it — include the words and phrase
 ```
 
 - `name` must be kebab-case and match the containing directory.
-- `description` is the *only* thing Claude sees when deciding whether to load the
+- `description` is the _only_ thing Claude sees when deciding whether to load the
   skill, so it carries the whole triggering burden. State what the skill does,
   then when to use it, in third person. Concrete trigger phrases beat abstract
   summaries.

@@ -2,22 +2,26 @@
   "name": "@kensio/part-factory-test-data",
   "version": "1.0.0",
   "description": "How to build test data with @kensio/part-factory, covering which factory to reach for, when a mapped factory earns its place, and why factories belong beside the type they construct.",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "claude-code-plugin",
+    "factory",
+    "faker",
+    "kensio",
+    "part-factory",
+    "skill",
+    "test-data",
+    "testing"
+  ],
+  "homepage": "https://kensio.ai",
   "license": "Apache-2.0",
   "author": "Kensio Software <hugh@kensiosoftware.co.uk>",
-  "homepage": "https://kensio.ai",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/KensioSoftware/kensio.ai.git",
     "directory": "plugins/part-factory-test-data"
   },
-  "keywords": [
-    "claude",
-    "claude-code",
-    "claude-code-plugin",
-    "skill",
-    "kensio",
-    "testing", "test-data", "factory", "part-factory", "faker"
-  ],
   "files": [
     ".claude-plugin",
     "skills",
