@@ -18,14 +18,26 @@ jobs:
           node-version: 22
           cache: npm
 
+      # Matches the release workflow, which needs npm >= 11.5.1 for trusted
+      # publishing. Keeping both on the same npm is what makes a green PR
+      # evidence that the release will get that far too.
+      - name: Update npm
+        run: npm install -g npm@latest
+
       - name: Install workspaces
         run: npm ci
 
       - name: Check formatting
         run: npm run format:check
 
+      # Named explicitly because newer npm blocks install scripts by default, and
+      # the claude CLI fetches its native binary from a postinstall. The version
+      # check is the assertion: without it a blocked postinstall installs
+      # "successfully" and only fails later, somewhere less obvious.
       - name: Install Claude Code CLI
-        run: npm install -g @anthropic-ai/claude-code
+        run: |
+          npm install -g --allow-scripts=@anthropic-ai/claude-code @anthropic-ai/claude-code
+          claude --version
 
       - name: Validate marketplace and plugin manifests
         run: npm run validate

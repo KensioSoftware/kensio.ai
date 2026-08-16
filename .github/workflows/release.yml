@@ -46,8 +46,15 @@ jobs:
       - name: Install workspaces
         run: npm ci
 
+      # Newer npm blocks install scripts unless the package is named, and the
+      # claude CLI fetches its native binary from a postinstall. Without this the
+      # install "succeeds" and then every `claude` call fails, which is how the
+      # first release run died. The version check turns that into a loud failure
+      # at the point of cause.
       - name: Install Claude Code CLI
-        run: npm install -g @anthropic-ai/claude-code
+        run: |
+          npm install -g --allow-scripts=@anthropic-ai/claude-code @anthropic-ai/claude-code
+          claude --version
 
       # Never tag or publish something that would not have passed on a PR.
       - name: Check
