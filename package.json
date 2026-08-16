@@ -1,6 +1,6 @@
 {
   "name": "kensio.ai",
-  "version": "0.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Claude Code skills from Kensio Software, distributed as a plugin marketplace and as npm packages.",
   "homepage": "https://kensio.ai",
@@ -21,9 +21,12 @@
     "check": "npm run format:check && npm run validate && npm run check:versions"
   },
   "devDependencies": {
-    "oxfmt": "^0.63.0"
+    "@semantic-release/exec": "^7.1.0",
+    "@semantic-release/git": "^10.0.1",
+    "oxfmt": "^0.63.0",
+    "semantic-release": "^25.0.9"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.14"
   }
 }

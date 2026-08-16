@@ -1,6 +1,6 @@
 {
   "name": "@kensio/part-factory-test-data",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "How to build test data with @kensio/part-factory, covering which factory to reach for, when a mapped factory earns its place, and why factories belong beside the type they construct.",
   "keywords": [
     "claude",
