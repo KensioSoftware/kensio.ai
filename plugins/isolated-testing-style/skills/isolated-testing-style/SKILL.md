@@ -6,7 +6,7 @@ description: Write tests that start from given/when/then, use real collaborators
 # Isolated testing style
 
 An opinionated way of writing tests. The examples are TypeScript and vitest, but the rules are about
-test design rather than any framework. Each rule exists because of a specific failure it would have
+test design, not about any framework. Each rule exists because of a specific failure it would have
 caught.
 
 ## Start with Given, When, Then
@@ -21,15 +21,15 @@ it("refuses an order once the offer has closed", async () => {
 });
 ```
 
-Starting here rather than arriving here does three things.
+Starting at this point, and not drifting to it, does three things.
 
 **It lowers the cost of starting.** You only have to say what the situation is, what happens, and
 what should result. That is a smaller question than "how do I test this?", and you can usually
 answer it before you can answer the bigger one.
 
 **It designs the interface.** Filling in `// When` forces you to name the single action under test,
-in the caller's vocabulary rather than the implementation's. A step you cannot write as one
-`// When` is usually telling you the interface is wrong, not the test.
+in the caller's vocabulary, not the implementation's. A step you cannot write as one `// When` is
+usually telling you the interface is wrong, not the test.
 
 **It keeps the test readable as documentation.** Tests are read far more often than they are
 written, and without the structure it is easy to produce a body where essential behaviour and
@@ -50,7 +50,7 @@ it("refuses an order once the offer has closed", async () => {
 });
 ```
 
-`// Given an offer` restates the code and is worth nothing.
+`// Given an offer` restates the code and adds no information.
 `// Given an offer that closed while the customer was on the page` says which case this is and why
 it matters. This holds whether or not the test is written first.
 
@@ -59,57 +59,57 @@ it matters. This holds whether or not the test is written first.
 A stub asserts that your code called something. A simulator asserts that it called the service
 correctly.
 
-That difference is the whole argument. A stub answers whatever you told it to answer, so it agrees
-with your understanding of the API by construction. It cannot disagree with you, which means it
-cannot find the case where your understanding is wrong. A simulator holds real state and applies the
-real rules, so a wrong call fails at the point the real service would have failed.
+That difference is the whole argument. A stub answers whatever you told it to answer. It agrees with
+your understanding of the API by construction. It cannot disagree with you, which means it cannot
+find the case where your understanding is wrong. A simulator holds real state and applies the real
+rules. A wrong call fails at the point the real service would have failed.
 
-The evidence: on a real project, replacing AWS SDK stubs with a simulator immediately caught two
-bugs that had already shipped.
+The evidence comes from a real project. Replacing AWS SDK stubs with a simulator immediately caught
+two bugs that had already shipped.
 
 - A Secrets Manager secret name ending in a hyphen and six characters. AWS appends exactly that
-  suffix to a secret ARN, so the name was ambiguous with the ARN form, which AWS advises against.
-  The stub had no opinion, because a stub has no naming rules.
+  suffix to a secret ARN. The name was ambiguous with the ARN form, which AWS advises against. The
+  stub had no opinion, because a stub has no naming rules.
 - A Cognito `SECRET_HASH` computed the wrong way. The stub accepted it, because the stub was never
   going to check a signature.
 
 So the order to reach for things:
 
 1. A simulator that holds real state and applies real rules.
-2. The real thing, when it runs in process and needs nothing external.
+2. The real thing, when it runs in process and needs no external service.
 3. A stub, only for something with no rules worth modelling, such as a clock or a random source.
 
 The first two options need the implementation to be swappable, so give each collaborator a single
-point of entry: one place that wires the real service in production and a simulation in tests. The
+point of entry, one place that wires the real service in production and a simulation in tests. The
 driver pattern is one way to arrange that, but the name matters far less than the swap having one
 home.
 
-Simulating in process pays off beyond avoiding stubs. There is nothing to deploy before running the
+Simulating in process pays off beyond avoiding stubs. No deployment is needed before running the
 tests, a debugger steps through the collaborator's state alongside your own, and no state is shared
 between processes, so several layers can be exercised together and still run in parallel at the
 speed of a unit test.
 
-Be honest about the limit. An in-memory implementation is not the real service and cannot be relied
-on to behave identically. Keep a thin layer of tests against the real thing for the flows where that
-matters, and treat any divergence you find as a bug in the simulation rather than a quirk to work
-around.
+Be honest about the limit. An in-memory implementation only approximates the real service, and
+cannot be relied on to behave identically. Keep a thin layer of tests against the real thing for the
+flows where that matters, and treat any divergence you find as a bug in the simulation rather than a
+quirk to work around.
 
 ## Keep setup cheap and independent
 
-Tangled shared fixtures are not a discipline failure. Teams share setup roughly in proportion to how
-expensive it is to build. When getting a test into the right state means threading through a web of
-existing fixtures, reusing what is already there is the rational move — and each reuse adds another
-edge to the graph. That is how a suite arrives at setup that no one dares to touch.
+Tangled shared fixtures come from economics, not from indiscipline. Teams share setup roughly in
+proportion to how expensive it is to build. When getting a test into the right state means threading
+through a web of existing fixtures, reusing what is already there is the rational move, and each
+reuse adds another edge to the graph. That is how a suite arrives at setup that no one dares to
+touch.
 
-The fix is not to share less. Shared factories for test entities are exactly what you want: a
+The fix is to share differently. Shared factories for test entities are exactly what you want. A
 factory that constructs a type is worth writing once and using everywhere. What has to be avoided is
 those factories getting tangled up with each other. Each piece of setup should stand on its own.
 
 Independence comes from taking dependencies explicitly rather than reaching for ambient state. A
 factory that is handed what it needs stays pure, and the test decides what to hand it.
-`@kensio/part-factory` builds this in: factories take a `dependencies` object as a second argument
-at call time, so a factory that needs a simulated AWS is given one rather than going looking for
-one.
+`@kensio/part-factory` builds this in. Factories take a `dependencies` object as a second argument
+at call time. A factory that needs a simulated AWS is given one rather than going looking for one.
 
 ```typescript
 // Given an order that exists in this test's own simulated AWS.
@@ -118,8 +118,8 @@ const order = await orderFactory.make({ total: 5000 }, { simAws });
 ```
 
 A factory built that way can be shared as widely as you like and still stand on its own, because
-nothing it does depends on what another factory did first. Prefer collaborators and factories that
-need only instantiation: no side effects, nothing to undo, nothing to coordinate.
+everything it does is independent of what another factory did first. Prefer collaborators and
+factories that need only instantiation, with no side effects, no cleanup and no coordination.
 
 For a step specific to one test rather than a reusable factory, ask whether the step belongs to the
 test or the test belongs to the step. A helper confined to one file can be pulled back inline later
@@ -128,8 +128,8 @@ It is that reversibility worth preserving, not locality for its own sake.
 
 ## Get isolation from the data, not from setup and teardown
 
-Randomised values make collisions impossible, so there is nothing to tear down and no ordering to
-depend on. Randomised is enough. Guaranteed uniqueness is not needed, and a UUID has no realistic
+Randomised values make collisions impossible. No teardown is required, and there is no ordering to
+depend on. Randomised is enough. Guaranteed uniqueness is unnecessary, and a UUID has no realistic
 chance of colliding anyway.
 
 Do not do this:
@@ -151,7 +151,7 @@ afterEach(async () => {
 
 That test cannot run beside another test using the same name, the `let` is only mutable so that
 `afterEach` can reach it, and a failure part way through leaves the next test to fail for a reason
-that has nothing to do with it.
+unrelated to it.
 
 Do this instead:
 
@@ -168,11 +168,11 @@ it("serves an uploaded object", async () => {
 The environment those tests run against can be shared, and should be built the way production is
 built. A realistic environment that several tests read from is closer to production than a minimal
 one rebuilt per test, and it is faster. The isolation comes from the names and identifiers, so
-sharing the environment costs nothing.
+sharing the environment is free.
 
 Faker is the source of these values. Prefer a generator that produces a realistic value of the right
 kind (`faker.internet.email()`, `faker.string.uuid()`, `faker.company.name()`) over a counter or a
-literal with a suffix, so the test data also exercises the shapes production data has.
+literal with a suffix. The test data also exercises the shapes production data has.
 
 ## Assert behaviour, not call counts
 
@@ -223,9 +223,9 @@ expect(computeSecretHash(username, clientId, clientSecret)).toBe(
 Two ways out, in order of preference:
 
 1. Let a real implementation validate it. A simulated Cognito checks a `SECRET_HASH` the way Cognito
-   checks it, so a sign-in that succeeds against the simulation is evidence the hash is right.
-2. Pin against an independent authority: a value from the service's own documentation, a published
-   test vector, or a value produced by a different implementation.
+   checks it. A sign-in that succeeds against the simulation is evidence the hash is right.
+2. Pin against an independent authority, such as a value from the service's own documentation, a
+   published test vector, or a value produced by a different implementation.
 
 The same rule covers snapshot tests of anything the code under test formats. A snapshot records what
 the code does, not what it should do.
@@ -233,8 +233,8 @@ the code does, not what it should do.
 ## Nothing at the top level but imports
 
 In an ideal vitest or jest file, the only things outside the top-level `describe()` are the imports.
-State, construction and helpers all live inside it, so the file reads as a description of behaviour
-rather than as a program that happens to contain some tests.
+State, construction and helpers all live inside it. The file reads as a description of behaviour and
+not as a program that happens to contain some tests.
 
 ```typescript
 import { describe, expect, it } from "vitest";
@@ -248,18 +248,18 @@ describe("placing an order", () => {
 });
 ```
 
-This is mostly a consequence of the other rules rather than an extra one. What usually accumulates
-at the top level of a test file is module-level state the tests share, a mutable handle that exists
-so `afterEach` can reach it, and hoisted mock registrations — and the rules above have already
-turned down all three. So a top level that will not stay empty is a useful signal that something
-further up has slipped. Imported factories are not a problem here: they arrive as imports precisely
-because they stand on their own.
+This is mostly a consequence of the other rules, not an extra one. What usually accumulates at the
+top level of a test file is module-level state the tests share, a mutable handle that exists so
+`afterEach` can reach it, and hoisted mock registrations. The rules above have already turned down
+all three. So a top level that will not stay empty is a useful signal that something further up has
+slipped. Imported factories are fine here. They arrive as imports precisely because they stand on
+their own.
 
 ## Put test support beside the code, not in the test file
 
 A test file should hold tests. Where support lives depends on what it is for.
 
-A factory for a **type** belongs beside the type it constructs, exported, so that no consumer ever
+A factory for a **type** belongs beside the type it constructs, exported. That no consumer ever
 hand-rolls the literal:
 
 ```
@@ -272,15 +272,15 @@ src/orders/
 A library that defines a shape other code has to construct should export the factory for it.
 
 A step written for **one test** stays in that test's file, inside the `describe`. Promoting it later
-when another test wants it is fine — make it independent first, so what spreads is a self-contained
-factory rather than a dependency on how some other test left things.
+when another test wants it is fine. Make it independent first, so what spreads is a self-contained
+factory (not a dependency on how some other test left things).
 
-If a test file is mostly setup, that is a signal — but the fix is usually cheaper construction, not
-a shared fixture. Scroll the file and see how much of it is `it(...)` bodies making assertions.
+If a test file is mostly setup, that is a signal. The fix is usually cheaper construction, not a
+shared fixture. Scroll the file and see how much of it is `it(...)` bodies making assertions.
 
 ## Tools that help
 
-These serve the style; they are not the style, which holds without them.
+These serve the style. The style holds without them.
 
 - [Faker](https://fakerjs.dev/) for randomised, realistic values.
 - [`@kensio/part-factory`](https://partfactory.dev/) for typed factories that need only

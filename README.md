@@ -2,7 +2,7 @@
 
 [https://kensio.ai](https://kensio.ai "Kensio AI Skills & Tooling")
 
-Claude Code skills from [Kensio Software](https://kensiosoftware.co.uk) — reusable, opinionated ways
+Claude Code skills from [Kensio Software](https://kensiosoftware.co.uk). Reusable, opinionated ways
 of working, packaged as installable plugins.
 
 This repository is the canonical source. Each skill is a self-contained plugin that can be installed
@@ -48,7 +48,7 @@ npm install @kensio/isolated-testing-style
 ```
 
 The package contains the plugin folder as-is (`.claude-plugin/` plus `skills/`), so point Claude
-Code at it — or at `node_modules/@kensio/<skill-name>` — as a local plugin.
+Code at it (or at `node_modules/@kensio/<skill-name>`) as a local plugin.
 
 ### From an archive
 
@@ -69,7 +69,7 @@ other two are tools that serve it.
 
 ## Repository layout
 
-A pnpm workspace monorepo. The `plugins/` directory serves double duty: it is both the workspace
+A pnpm workspace monorepo. The `plugins/` directory serves double duty. It is both the workspace
 glob and the set of relative-path sources in the marketplace catalog.
 
 ```
@@ -88,13 +88,13 @@ kensio.ai/
 └── pnpm-workspace.yaml           # packages: ["plugins/*"]
 ```
 
-Each plugin folder must be **self-contained** — no `../` references outside it. Plugins get copied,
-zipped, and installed standalone, so those paths would not resolve.
+Each plugin folder must be **self-contained**, with no `../` references outside it. Plugins get
+copied, zipped, and installed standalone, so those paths would not resolve.
 
 ## Adding a skill
 
 See [`plugins/skill-template`](plugins/skill-template/skills/skill-template/SKILL.md) for the full
-walkthrough. In short: create `plugins/<skill-name>/` with the layout above, add a matching entry to
+walkthrough. In short, create `plugins/<skill-name>/` with the layout above, add a matching entry to
 `.claude-plugin/marketplace.json`, and run the checks.
 
 ## Development
@@ -108,8 +108,8 @@ pnpm check
   [oxfmt](https://oxc.rs/docs/guide/usage/formatter). `pnpm format:check` is the read-only version
   CI runs.
 - `pnpm validate` — runs `claude plugin validate --strict` against the marketplace manifest and
-  every plugin it lists. Requires the Claude Code CLI (`npm install -g @anthropic-ai/claude-code`);
-  no authentication needed.
+  every plugin it lists. Requires the Claude Code CLI (`npm install -g @anthropic-ai/claude-code`),
+  and no authentication needed.
 - `pnpm check:versions` — asserts that every `plugin.json` and `package.json` carries the same
   version as the root `package.json`, that names match their folder, and that the marketplace
   catalog and `plugins/` directory agree.
@@ -117,7 +117,7 @@ pnpm check
 Formatter settings live in [`.oxfmtrc.json`](.oxfmtrc.json). Two of them are deliberate:
 `proseWrap: "always"` rewraps Markdown prose at `printWidth`, so paragraphs never need wrapping by
 hand, and `embeddedLanguageFormatting: "off"` leaves fenced code samples exactly as written, since
-those are hand-tuned illustrations rather than code to be normalised.
+those are hand-tuned illustrations, not code to be normalised.
 
 Both run in CI on every push and pull request
 ([`.github/workflows/validate.yml`](.github/workflows/validate.yml)), along with an
@@ -127,7 +127,7 @@ Both run in CI on every push and pull request
 
 Releases are automatic. Every merge to `main` runs [`release.yml`](.github/workflows/release.yml),
 which reads the conventional-commit subjects since the last tag, works out the next version, and
-either releases it or does nothing.
+either releases it or stays put.
 
 **Do not edit version numbers by hand.** The release decides them, and
 [`check-versions.mjs`](scripts/check-versions.mjs) fails the build if they drift.
@@ -135,8 +135,8 @@ either releases it or does nothing.
 ### How the version is decided
 
 The PR title is the commit subject that lands on `main`, because merges are squash-only and the
-squash title is set to the PR title. [`pr-title.yml`](.github/workflows/pr-title.yml) lints it, so
-the string the version is derived from is always one that has been checked.
+squash title is set to the PR title. [`pr-title.yml`](.github/workflows/pr-title.yml) lints it. The
+string the version is derived from is always one that has been checked.
 
 | PR title                        | Effect            |
 | ------------------------------- | ----------------- |
@@ -148,35 +148,35 @@ the string the version is derived from is always one that has been checked.
 ### The version bump comes back as a pull request
 
 The `main` ruleset requires pull requests, and the built-in GitHub Actions app cannot be added to
-its bypass list — GitHub rejects it, because it is not an app installed in the organisation. Tags
-are unaffected, since the ruleset targets `refs/heads/main` only, so the release still tags and
+its bypass list, and GitHub rejects it, because it lives outside the organisation's installed apps.
+Tags are unaffected, since the ruleset targets `refs/heads/main` only. The release still tags and
 publishes directly and only the manifest bump needs a pull request.
 
 **That pull request does need merging.** The marketplace serves `plugin.json` from `main`, so until
 it lands, the tag and the registry are ahead of what anyone installing from the marketplace sees. It
-is opened by the release workflow, so the required checks cannot post against it — a pull request
-created with `GITHUB_TOKEN` does not trigger workflow runs — and it is merged with an admin bypass.
+is opened by the release workflow. The required checks cannot post against it (a pull request
+created with `GITHUB_TOKEN` does not trigger workflow runs), and it is merged with an admin bypass.
 
 ### One version, everywhere
 
-All eleven manifests — the root `package.json`, and each plugin's `package.json` and `plugin.json` —
+All eleven manifests (the root `package.json`, and each plugin's `package.json` and `plugin.json`)
 carry the same number, written by [`set-version.mjs`](scripts/set-version.mjs). A version therefore
 means the same commit whether it came from the marketplace or from npm.
 
 The trade-off is that a release republishes every plugin, so Claude Code offers an update for
-plugins that did not change. That is deliberate: lockstep versions are much easier to reason about
-than five independent ones, and the packages are small.
+plugins that did not change. That is deliberate, because lockstep versions are much easier to reason
+about than five independent ones, and the packages are small.
 
 ### npm publishing
 
-Publishing is gated on the `PUBLISH_NPM` repository variable, so the workflow can be exercised
-before anything becomes permanent on npm. Until it is set, releases are tagged on GitHub only:
+Publishing is gated on the `PUBLISH_NPM` repository variable. The workflow can be exercised before
+anything becomes permanent on npm. Until it is set, releases are tagged on GitHub only:
 
 ```bash
 gh variable set PUBLISH_NPM --body true
 ```
 
-Authentication is npm [trusted publishing](https://docs.npmjs.com/trusted-publishers) over OIDC —
+Authentication is npm [trusted publishing](https://docs.npmjs.com/trusted-publishers) over OIDC,
 there is no npm token in this repository. Each package needs its trusted publisher configured once
 on npmjs.com before it can be published this way.
 
@@ -223,5 +223,5 @@ up.
 
 ## Licence
 
-Apache License 2.0 — see [LICENSE](LICENSE). Chosen over MIT for its explicit patent grant, which
+Apache License 2.0. See [LICENSE](LICENSE). Chosen over MIT for its explicit patent grant, which
 suits skills intended for use inside businesses.

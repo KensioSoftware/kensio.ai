@@ -13,9 +13,10 @@
   "scripts": {
     "validate": "node scripts/validate.mjs",
     "check:versions": "node scripts/check-versions.mjs",
+    "prose": "node plugins/technical-prose-style/skills/technical-prose-style/scripts/prose-check.mjs plugins README.md",
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
-    "check": "npm run format:check && npm run validate && npm run check:versions"
+    "check": "npm run format:check && npm run validate && npm run check:versions && npm run prose"
   },
   "devDependencies": {
     "@semantic-release/exec": "^7.1.0",

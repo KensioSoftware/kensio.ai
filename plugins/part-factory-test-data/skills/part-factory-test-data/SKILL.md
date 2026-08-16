@@ -5,7 +5,7 @@ description: Build test data with @kensio/part-factory, keeping in the factory e
 
 # Building test data with Part Factory
 
-[Part Factory](https://partfactory.dev/) (`@kensio/part-factory`) builds typed objects for tests: a
+[Part Factory](https://partfactory.dev/) (`@kensio/part-factory`) builds typed objects for tests. A
 factory holds the defaults, and `make(overrides)` returns an object with the overrides applied down
 through the nested structure.
 
@@ -17,10 +17,10 @@ test cheap enough that nobody reaches for a shared fixture in the first place.
 
 ## Say only what the test is about
 
-A factory defines every value the test does not care about, so the test can state only the values it
-does. That is the whole point of one.
+A factory defines every value the test ignores. The test can state only the values it does. That is
+the whole point of one.
 
-Without it, a test opens with twenty lines of construction and it is not clear which of them the
+Without it, a test opens with twenty lines of construction and it is unclear which of them the
 assertions actually depend on. With it, the lines that are there are the lines that matter:
 
 ```typescript
@@ -37,26 +37,26 @@ it("charges VAT on the order total", () => {
 ```
 
 The prices are written down because the assertion is arithmetic on them. The order id, the customer
-id and the dates are not, because the test would read the same whatever they were. The rule is that
-simple: **if an assertion depends on a value, put it in the test; otherwise let the factory supply
-it.**
+id and the dates stay with the factory, because the test would read the same whatever they were. The
+rule is that simple: **if an assertion depends on a value, put it in the test. Otherwise let the
+factory supply it.**
 
 This also removes a pressure that quietly damages production types. When constructing an object by
-hand is painful, the tempting fix is to mark its required fields optional so tests can skip them —
-weakening the type for every caller in order to serve the tests. A factory makes the setup cheap, so
-the type can go on saying what is actually required.
+hand is painful, the tempting fix is to mark its required fields optional so tests can skip them,
+weakening the type for every caller in order to serve the tests. A factory makes the setup cheap.
+The type can go on saying what is actually required.
 
 ## Overrides are a deep partial
 
 Overrides merge into the defaults rather than replacing them, all the way down the nested structure.
-That is what makes "state only what matters" possible: a test can set one field three levels deep
+That is what makes "state only what matters" possible. A test can set one field three levels deep
 and leave its siblings alone.
 
 Two consequences worth knowing:
 
 - Arrays override by index, so `{ lines: [{ price: 1000 }] }` replaces the first default line and
   leaves any others in place.
-- An empty array does not clear the defaults. To assert on emptiness, build the case some other way
+- An empty array leaves the defaults in place. To assert on emptiness, build the case some other way
   rather than expecting `{ lines: [] }` to do it.
 
 ## Which factory
@@ -64,8 +64,8 @@ Two consequences worth knowing:
 - **`StaticFactory`** when the defaults are fixed values. The simplest thing that works, and the
   right default choice.
 - **`DynamicFactory`** when the defaults have to be generated fresh for each object. Pair it with
-  [`@faker-js/faker`](https://fakerjs.dev/). This is what gives tests their isolation: a random
-  email or a UUID means two tests cannot collide, so neither needs tearing down.
+  [`@faker-js/faker`](https://fakerjs.dev/). This is what gives tests their isolation. A random
+  email or a UUID means two tests cannot collide, so tearing down is unnecessary.
 - **`VariantFactory`** for a named variation of a base factory, when the variation is a concept the
   tests talk about. `closedOfferFactory` reads better in ten tests than
   `offerFactory.make({ closesAt: aMinuteAgo })` written ten times.
@@ -95,8 +95,8 @@ in the test is shorter and says more.
 
 ## Reach for MappedFactory only when the map is a real transformation
 
-`MappedFactory` earns its place when the thing you want to override is not shaped like the thing you
-want back. Good cases:
+`MappedFactory` earns its place when the thing you want to override has a different shape from the
+thing you want back. Good cases:
 
 - Parts to an encoded form body: `{ email, password }` mapped to a
   `application/x-www-form-urlencoded` string.
@@ -106,11 +106,11 @@ want back. Good cases:
 
 If the mapping function is copying fields across into an object of the same shape, you wanted a
 `DynamicFactory`. An identity map adds a type parameter, a second function and a layer of
-indirection, and buys nothing.
+indirection, and buys little.
 
 ## Pass dependencies at call time
 
-A factory that needs something from the outside world — a store, a client, a configured host —
+A factory that needs something from the outside world (a store, a client, a configured host)
 declares it as a third type parameter and receives it as the second argument to `make`:
 
 ```typescript
@@ -128,12 +128,12 @@ const order = await storedOrderFactory.make({ total: 5000 }, { orders });
 ```
 
 Dependencies are given at call time rather than held by the factory, and are used as they are given,
-never fetched or awaited. That is what keeps a factory shareable: it holds no state of its own,
-reaches for nothing ambient, and cannot depend on what another factory did first. A factory built
+never fetched or awaited. That is what keeps a factory shareable. It holds no state of its own,
+reaches for no ambient state, and cannot depend on what another factory did first. A factory built
 this way can be used in every test file in the codebase and still stand on its own.
 
-Keep each dependency as narrow as the factory actually needs. An `OrderStore` is a dependency; the
-whole application is not. A wide dependency is how state starts leaking between tests that were
+Keep each dependency as narrow as the factory actually needs. An `OrderStore` is a dependency. The
+whole application never is. A wide dependency is how state starts leaking between tests that were
 supposed to be independent.
 
 ## Do not wrap a factory in a function that applies overrides
@@ -145,7 +145,7 @@ export function makeCustomer(overrides: Partial<Customer> = {}): Customer {
 }
 ```
 
-`make(overrides)` already is that function, and it does the job better: its overrides are partial
+`make(overrides)` already is that function, and it does the job better. Its overrides are partial
 all the way down the nested structure, where the spread above replaces a nested object whole.
 
 A wrapper that does anything more than pass overrides through is a signal to read rather than to
@@ -155,17 +155,17 @@ write. It usually means one of two things:
   computing, or deriving one field from another. Move that into a `DynamicFactory` defaults
   function, which receives the overrides, or into a `MappedFactory` map.
 - **The output type is fighting you.** The wrapper is casting, widening or filling in a field the
-  type demands but the test does not care about. Fix the type, or use `MappedFactory` so the parts
-  and the output are allowed to differ.
+  type demands but the test ignores. Fix the type, or use `MappedFactory` so the parts and the
+  output are allowed to differ.
 
-The same goes for a wrapper that exists to pass a dependency: declare it on the factory instead.
+The same goes for a wrapper that exists to pass a dependency. Declare it on the factory instead.
 
 ## Factories belong beside the type they construct
 
 A library that defines an event, a message or a payload shape should export a factory for it.
 Otherwise every consumer hand-rolls the literal, and every copy drifts.
 
-The worked example: an AWS Lambda function URL invocation event, payload format 2.0. It is around
+The worked example is an AWS Lambda function URL invocation event, payload format 2.0. It is around
 thirty lines, of which two matter to any given test.
 
 ```json
@@ -186,7 +186,7 @@ thirty lines, of which two matter to any given test.
 ```
 
 Hand-writing that in three test files gives three copies that drift as the shape changes. It also
-carries a real trap: the path is in the event twice, as `rawPath` and as `requestContext.http.path`,
+carries a real trap. The path is in the event twice, as `rawPath` and as `requestContext.http.path`,
 and the query string is in it twice, as `rawQueryString` and as `queryStringParameters`. A test that
 sets one and not the other passes against a handler reading the field the test set, and fails in
 production against the same handler reading the other one.
