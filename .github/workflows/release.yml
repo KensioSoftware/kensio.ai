@@ -61,7 +61,9 @@ jobs:
           if [ -z "$(git tag -l 'v*')" ]; then
             BASELINE="v$(node -p "require('./package.json').version")"
             echo "No tags yet — seeding $BASELINE at HEAD; no release this run."
-            git tag "$BASELINE"
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "$BASELINE" -m "Baseline for automated releases"
             git push origin "$BASELINE"
           fi
 
