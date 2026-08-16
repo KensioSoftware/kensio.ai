@@ -1,0 +1,34 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "kensio",
+  "description": "Claude Code skills from Kensio Software — reusable, opinionated ways of working, packaged as installable plugins.",
+  "owner": {
+    "name": "Kensio Software",
+    "email": "hugh@kensiosoftware.co.uk",
+    "url": "https://kensio.ai"
+  },
+  "plugins": [
+    {
+      "name": "hello-world",
+      "description": "A minimal example skill that demonstrates the shape of a Kensio plugin. Use it to verify that the marketplace is wired up correctly.",
+      "source": "./plugins/hello-world",
+      "author": {
+        "name": "Kensio Software",
+        "email": "hugh@kensiosoftware.co.uk"
+      },
+      "category": "productivity",
+      "tags": ["example", "hello-world"]
+    },
+    {
+      "name": "skill-template",
+      "description": "A copy-and-edit starting point for writing a new Claude Code skill, covering SKILL.md frontmatter, description wording, and progressive disclosure.",
+      "source": "./plugins/skill-template",
+      "author": {
+        "name": "Kensio Software",
+        "email": "hugh@kensiosoftware.co.uk"
+      },
+      "category": "productivity",
+      "tags": ["example", "template", "authoring"]
+    }
+  ]
+}
