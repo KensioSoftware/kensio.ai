@@ -180,6 +180,47 @@ Authentication is npm [trusted publishing](https://docs.npmjs.com/trusted-publis
 there is no npm token in this repository. Each package needs its trusted publisher configured once
 on npmjs.com before it can be published this way.
 
+#### Bootstrapping a package onto npm
+
+Trusted publishing is configured on a package's settings page on npmjs.com, which means the package
+has to exist before it can be configured. npm has no equivalent of PyPI's pending publishers, so the
+first version of every package is published by hand, from a clean checkout of the release tag:
+
+```bash
+for plugin in plugins/*/; do npm publish "./$plugin" --access public; done
+```
+
+The `./` prefix is not optional — npm reads a bare `plugins/<name>` as the GitHub shorthand
+`owner/repo` and tries to clone it. That first version carries no provenance attestation, because
+provenance is minted from the workflow's OIDC token and there is no workflow involved; every version
+after it does.
+
+Then, for each package, under **Settings → Trusted Publisher** on npmjs.com:
+
+| Field       | Value            |
+| ----------- | ---------------- |
+| Publisher   | GitHub Actions   |
+| Owner       | `KensioSoftware` |
+| Repository  | `kensio.ai`      |
+| Workflow    | `release.yml`    |
+| Environment | `release`        |
+
+A new plugin added later needs the same two steps before its first release, or the release will tag
+successfully and fail at `npm publish`.
+
+#### Why the release job names an environment
+
+A trusted publisher binds to an owner, a repository and a workflow filename — not to a ref. On its
+own that would let any run of `release.yml` publish, including a modified copy pushed to a branch
+and started by hand through `workflow_dispatch`. The `release` environment closes that: its
+deployment rule allows `main` only, so a run from any other ref cannot enter it and fails before
+reaching `npm publish`. The environment name is itself an OIDC claim, which is why it has to match
+on both sides.
+
+It deliberately carries no reviewers and no wait timer. A protection rule that waits for a human
+would stall every release at exactly the point where the tag exists and the registry has not caught
+up.
+
 ## Licence
 
 Apache License 2.0 — see [LICENSE](LICENSE). Chosen over MIT for its explicit patent grant, which
