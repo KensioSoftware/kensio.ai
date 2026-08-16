@@ -1,6 +1,6 @@
 ---
 name: part-factory-test-data
-description: Build test data with @kensio/part-factory, choosing between StaticFactory, DynamicFactory, VariantFactory and MappedFactory, pairing dynamic defaults with faker, and exporting factories from the library that owns the type. Use when writing test fixtures or builders, when a test file is full of object literals, when a shared event, message or payload shape is being hand-written, and when tempted to wrap a factory in a helper function that applies overrides.
+description: Build test data with @kensio/part-factory, keeping in the factory everything a test does not care about, passing dependencies at call time so factories stay independent, and choosing between StaticFactory, DynamicFactory, VariantFactory, MappedFactory and AsyncMappedFactory. Use when writing test fixtures or builders, when a test file is full of object literals, when a shared event, message or payload shape is being hand-written, when a required field is about to be made optional to ease test setup, and when tempted to wrap a factory in a helper function that applies overrides.
 ---
 
 # Building test data with Part Factory
@@ -9,11 +9,55 @@ description: Build test data with @kensio/part-factory, choosing between StaticF
 factory holds the defaults, and `make(overrides)` returns an object with the overrides applied down
 through the nested structure.
 
-The package README is the authority on the API. This skill covers which factory to reach for and
-where factories should live.
+The package README is the authority on the API. This skill covers what to put in a factory, where
+factories should live, and which one to reach for.
 
-This skill serves the `isolated-testing-style` skill, which is the general argument for keeping
-setup out of test bodies.
+It serves the `isolated-testing-style` skill. Factories are what make building state inside each
+test cheap enough that nobody reaches for a shared fixture in the first place.
+
+## Say only what the test is about
+
+A factory defines every value the test does not care about, so the test can state only the values it
+does. That is the whole point of one.
+
+Without it, a test opens with twenty lines of construction and it is not clear which of them the
+assertions actually depend on. With it, the lines that are there are the lines that matter:
+
+```typescript
+it("charges VAT on the order total", () => {
+  // Given an order whose lines add up to a total the assertion depends on.
+  const order = orderFactory.make({ lines: [{ price: 1000 }, { price: 2000 }] });
+
+  // When it is priced.
+  const priced = priceOrder(order);
+
+  // Then VAT is a fifth of that total.
+  expect(priced.vat).toBe(600);
+});
+```
+
+The prices are written down because the assertion is arithmetic on them. The order id, the customer
+id and the dates are not, because the test would read the same whatever they were. The rule is that
+simple: **if an assertion depends on a value, put it in the test; otherwise let the factory supply
+it.**
+
+This also removes a pressure that quietly damages production types. When constructing an object by
+hand is painful, the tempting fix is to mark its required fields optional so tests can skip them —
+weakening the type for every caller in order to serve the tests. A factory makes the setup cheap, so
+the type can go on saying what is actually required.
+
+## Overrides are a deep partial
+
+Overrides merge into the defaults rather than replacing them, all the way down the nested structure.
+That is what makes "state only what matters" possible: a test can set one field three levels deep
+and leave its siblings alone.
+
+Two consequences worth knowing:
+
+- Arrays override by index, so `{ lines: [{ price: 1000 }] }` replaces the first default line and
+  leaves any others in place.
+- An empty array does not clear the defaults. To assert on emptiness, build the case some other way
+  rather than expecting `{ lines: [] }` to do it.
 
 ## Which factory
 
@@ -22,12 +66,12 @@ setup out of test bodies.
 - **`DynamicFactory`** when the defaults have to be generated fresh for each object. Pair it with
   [`@faker-js/faker`](https://fakerjs.dev/). This is what gives tests their isolation: a random
   email or a UUID means two tests cannot collide, so neither needs tearing down.
-- **`VariantFactory`** for a named variation of a base factory, when the variation is worth a name
-  in the test. `closedOfferFactory` reads better in ten tests than
+- **`VariantFactory`** for a named variation of a base factory, when the variation is a concept the
+  tests talk about. `closedOfferFactory` reads better in ten tests than
   `offerFactory.make({ closesAt: aMinuteAgo })` written ten times.
-- **`MappedFactory`** when the output shape differs from the parts you want to override. Its async
-  form, `AsyncMappedFactory`, is for when producing the value means awaiting something, such as
-  inserting a row or signing a payload.
+- **`MappedFactory`** when the output shape differs from the parts you want to override.
+- **`AsyncMappedFactory`** when producing the value means awaiting something, such as inserting a
+  row or signing a payload.
 
 ```typescript
 import { DynamicFactory } from "@kensio/part-factory";
@@ -39,6 +83,15 @@ export const customerFactory = new DynamicFactory<Customer>(() => ({
   name: faker.person.fullName(),
 }));
 ```
+
+## Do not add a variant for every case
+
+A variant earns its name when several tests mean the same thing by it. One test that needs an
+unusual value should write that value down, not gain a factory of its own in a file somewhere else.
+
+The failure mode is a directory of `cancelledOrderWithRefundAndNoAddressFactory` names, each used
+once, where reading a test means going to find out what its factory actually sets. Writing the field
+in the test is shorter and says more.
 
 ## Reach for MappedFactory only when the map is a real transformation
 
@@ -54,6 +107,34 @@ want back. Good cases:
 If the mapping function is copying fields across into an object of the same shape, you wanted a
 `DynamicFactory`. An identity map adds a type parameter, a second function and a layer of
 indirection, and buys nothing.
+
+## Pass dependencies at call time
+
+A factory that needs something from the outside world — a store, a client, a configured host —
+declares it as a third type parameter and receives it as the second argument to `make`:
+
+```typescript
+export const storedOrderFactory = new AsyncMappedFactory<
+  OrderParts,
+  Order,
+  { orders: OrderStore }
+>(
+  () => ({ total: faker.number.int({ min: 100, max: 10_000 }) }),
+  async (parts, { orders }) => orders.insert({ id: faker.string.uuid(), ...parts }),
+);
+
+// In a test, which decides what to hand it.
+const order = await storedOrderFactory.make({ total: 5000 }, { orders });
+```
+
+Dependencies are given at call time rather than held by the factory, and are used as they are given,
+never fetched or awaited. That is what keeps a factory shareable: it holds no state of its own,
+reaches for nothing ambient, and cannot depend on what another factory did first. A factory built
+this way can be used in every test file in the codebase and still stand on its own.
+
+Keep each dependency as narrow as the factory actually needs. An `OrderStore` is a dependency; the
+whole application is not. A wide dependency is how state starts leaking between tests that were
+supposed to be independent.
 
 ## Do not wrap a factory in a function that applies overrides
 
@@ -77,8 +158,7 @@ write. It usually means one of two things:
   type demands but the test does not care about. Fix the type, or use `MappedFactory` so the parts
   and the output are allowed to differ.
 
-The same goes for a wrapper that exists to pass a dependency. Factories take dependencies as a
-second argument at call time, so declare them on the factory instead.
+The same goes for a wrapper that exists to pass a dependency: declare it on the factory instead.
 
 ## Factories belong beside the type they construct
 
