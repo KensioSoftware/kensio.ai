@@ -32,7 +32,7 @@
     },
     {
       "name": "part-factory-test-data",
-      "description": "How to build test data with @kensio/part-factory, covering which factory to reach for, when a mapped factory earns its place, and why factories belong beside the type they construct.",
+      "description": "How to build test data with @kensio/part-factory: keeping in the factory everything a test does not care about, passing dependencies at call time so factories stay independent and shareable, and choosing between its static, dynamic, variant and mapped factories.",
       "source": "./plugins/part-factory-test-data",
       "author": {
         "name": "Kensio Software",
