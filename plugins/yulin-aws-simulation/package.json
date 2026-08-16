@@ -1,6 +1,6 @@
 {
   "name": "@kensio/yulin-aws-simulation",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "How to test AWS code well with the @kensio/yulin in-process simulator, covering SDK interception, deploying real synthesized CloudFormation templates, and handling what the simulator refuses.",
   "keywords": [
     "aws",
