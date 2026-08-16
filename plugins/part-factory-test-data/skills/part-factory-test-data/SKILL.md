@@ -6,29 +6,30 @@ description: Build test data with @kensio/part-factory, choosing between StaticF
 # Building test data with Part Factory
 
 [Part Factory](https://partfactory.dev/) (`@kensio/part-factory`) builds typed
-objects for tests: a factory holds the defaults, and `make(overrides)` returns an
-object with the overrides applied down through the nested structure.
+objects for tests: a factory holds the defaults, and `make(overrides)` returns
+an object with the overrides applied down through the nested structure.
 
-The package README is the authority on the API. This skill covers which factory to
-reach for and where factories should live.
+The package README is the authority on the API. This skill covers which factory
+to reach for and where factories should live.
 
-This skill serves the `isolated-testing-style` skill, which is the general argument
-for keeping setup out of test bodies.
+This skill serves the `isolated-testing-style` skill, which is the general
+argument for keeping setup out of test bodies.
 
 ## Which factory
 
-- **`StaticFactory`** when the defaults are fixed values. The simplest thing that
-  works, and the right default choice.
-- **`DynamicFactory`** when the defaults have to be generated fresh for each object.
-  Pair it with [`@faker-js/faker`](https://fakerjs.dev/). This is what gives tests
-  their isolation: a random email or a UUID means two tests cannot collide, so
-  neither needs tearing down.
-- **`VariantFactory`** for a named variation of a base factory, when the variation
-  is worth a name in the test. `closedOfferFactory` reads better in ten tests than
-  `offerFactory.make({ closesAt: aMinuteAgo })` written ten times.
+- **`StaticFactory`** when the defaults are fixed values. The simplest thing
+  that works, and the right default choice.
+- **`DynamicFactory`** when the defaults have to be generated fresh for each
+  object. Pair it with [`@faker-js/faker`](https://fakerjs.dev/). This is what
+  gives tests their isolation: a random email or a UUID means two tests cannot
+  collide, so neither needs tearing down.
+- **`VariantFactory`** for a named variation of a base factory, when the
+  variation is worth a name in the test. `closedOfferFactory` reads better in
+  ten tests than `offerFactory.make({ closesAt: aMinuteAgo })` written ten
+  times.
 - **`MappedFactory`** when the output shape differs from the parts you want to
-  override. Its async form, `AsyncMappedFactory`, is for when producing the value
-  means awaiting something, such as inserting a row or signing a payload.
+  override. Its async form, `AsyncMappedFactory`, is for when producing the
+  value means awaiting something, such as inserting a row or signing a payload.
 
 ```typescript
 import { DynamicFactory } from "@kensio/part-factory";
@@ -43,18 +44,18 @@ export const customerFactory = new DynamicFactory<Customer>(() => ({
 
 ## Reach for MappedFactory only when the map is a real transformation
 
-`MappedFactory` earns its place when the thing you want to override is not shaped
-like the thing you want back. Good cases:
+`MappedFactory` earns its place when the thing you want to override is not
+shaped like the thing you want back. Good cases:
 
 - Parts to an encoded form body: `{ email, password }` mapped to a
   `application/x-www-form-urlencoded` string.
-- Front matter parts to a file as written on disk: `{ title, tags, body }` mapped to
-  the YAML block plus the markdown underneath.
+- Front matter parts to a file as written on disk: `{ title, tags, body }`
+  mapped to the YAML block plus the markdown underneath.
 - Components to a formatted identifier: ARN parts mapped to the ARN string.
 
-If the mapping function is copying fields across into an object of the same shape,
-you wanted a `DynamicFactory`. An identity map adds a type parameter, a second
-function and a layer of indirection, and buys nothing.
+If the mapping function is copying fields across into an object of the same
+shape, you wanted a `DynamicFactory`. An identity map adds a type parameter, a
+second function and a layer of indirection, and buys nothing.
 
 ## Do not wrap a factory in a function that applies overrides
 
@@ -65,20 +66,21 @@ export function makeCustomer(overrides: Partial<Customer> = {}): Customer {
 }
 ```
 
-`make(overrides)` already is that function, and it does the job better: its overrides
-are partial all the way down the nested structure, where the spread above replaces a
-nested object whole.
+`make(overrides)` already is that function, and it does the job better: its
+overrides are partial all the way down the nested structure, where the spread
+above replaces a nested object whole.
 
-A wrapper that does anything more than pass overrides through is a signal to read
-rather than to write. It usually means one of two things:
+A wrapper that does anything more than pass overrides through is a signal to
+read rather than to write. It usually means one of two things:
 
-- **The factory is the wrong shape.** The wrapper is computing something the defaults
-  should be computing, or deriving one field from another. Move that into a
-  `DynamicFactory` defaults function, which receives the overrides, or into a
-  `MappedFactory` map.
-- **The output type is fighting you.** The wrapper is casting, widening or filling in
-  a field the type demands but the test does not care about. Fix the type, or use
-  `MappedFactory` so the parts and the output are allowed to differ.
+- **The factory is the wrong shape.** The wrapper is computing something the
+  defaults should be computing, or deriving one field from another. Move that
+  into a `DynamicFactory` defaults function, which receives the overrides, or
+  into a `MappedFactory` map.
+- **The output type is fighting you.** The wrapper is casting, widening or
+  filling in a field the type demands but the test does not care about. Fix the
+  type, or use `MappedFactory` so the parts and the output are allowed to
+  differ.
 
 The same goes for a wrapper that exists to pass a dependency. Factories take
 dependencies as a second argument at call time, so declare them on the factory
@@ -86,11 +88,12 @@ instead.
 
 ## Factories belong beside the type they construct
 
-A library that defines an event, a message or a payload shape should export a factory
-for it. Otherwise every consumer hand-rolls the literal, and every copy drifts.
+A library that defines an event, a message or a payload shape should export a
+factory for it. Otherwise every consumer hand-rolls the literal, and every copy
+drifts.
 
-The worked example: an AWS Lambda function URL invocation event, payload format 2.0.
-It is around thirty lines, of which two matter to any given test.
+The worked example: an AWS Lambda function URL invocation event, payload format
+2.0. It is around thirty lines, of which two matter to any given test.
 
 ```json
 {
@@ -110,14 +113,14 @@ It is around thirty lines, of which two matter to any given test.
 ```
 
 Hand-writing that in three test files gives three copies that drift as the shape
-changes. It also carries a real trap: the path is in the event twice, as `rawPath`
-and as `requestContext.http.path`, and the query string is in it twice, as
-`rawQueryString` and as `queryStringParameters`. A test that sets one and not the
-other passes against a handler reading the field the test set, and fails in
-production against the same handler reading the other one.
+changes. It also carries a real trap: the path is in the event twice, as
+`rawPath` and as `requestContext.http.path`, and the query string is in it
+twice, as `rawQueryString` and as `queryStringParameters`. A test that sets one
+and not the other passes against a handler reading the field the test set, and
+fails in production against the same handler reading the other one.
 
-A `MappedFactory` removes both problems. The parts are what a test cares about, and
-the map is what fills the event in consistently:
+A `MappedFactory` removes both problems. The parts are what a test cares about,
+and the map is what fills the event in consistently:
 
 ```typescript
 import { MappedFactory } from "@kensio/part-factory";
@@ -153,8 +156,9 @@ export const functionUrlEventFactory = new MappedFactory<
 const event = functionUrlEventFactory.make({ method: "POST", path: "/upload" });
 ```
 
-The path can no longer disagree with itself, because there is one place it is set.
+The path can no longer disagree with itself, because there is one place it is
+set.
 
-Export the factory from the package that owns the type, from a test-support entry
-point so it does not ship in the production bundle. Consumers then get a correct
-event with one call, and a change to the shape is made once.
+Export the factory from the package that owns the type, from a test-support
+entry point so it does not ship in the production bundle. Consumers then get a
+correct event with one call, and a change to the shape is made once.

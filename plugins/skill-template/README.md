@@ -10,5 +10,6 @@ triggers, and how to release a version bump.
 ```
 
 Part of [kensio.ai](https://github.com/KensioSoftware/kensio.ai). Licensed under
-the Apache License 2.0 — see the [LICENSE](https://github.com/KensioSoftware/kensio.ai/blob/main/LICENSE)
-in the repository root.
+the Apache License 2.0 — see the
+[LICENSE](https://github.com/KensioSoftware/kensio.ai/blob/main/LICENSE) in the
+repository root.

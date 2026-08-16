@@ -22,9 +22,9 @@ plugins/<skill-name>/
         └── SKILL.md
 ```
 
-**A plugin folder must be self-contained.** Never reference files outside it with
-`../` — plugins are copied, zipped, and installed standalone, so those paths will
-not resolve.
+**A plugin folder must be self-contained.** Never reference files outside it
+with `../` — plugins are copied, zipped, and installed standalone, so those
+paths will not resolve.
 
 ## Steps
 
@@ -50,10 +50,10 @@ description: <what it does, then when to use it — include the words and phrase
 ```
 
 - `name` must be kebab-case and match the containing directory.
-- `description` is the _only_ thing Claude sees when deciding whether to load the
-  skill, so it carries the whole triggering burden. State what the skill does,
-  then when to use it, in third person. Concrete trigger phrases beat abstract
-  summaries.
+- `description` is the _only_ thing Claude sees when deciding whether to load
+  the skill, so it carries the whole triggering burden. State what the skill
+  does, then when to use it, in third person. Concrete trigger phrases beat
+  abstract summaries.
 - Optional frontmatter worth knowing: `allowed-tools` (restrict the tools the
   skill may use) and `disable-model-invocation: true` (user-invocable only, via
   `/<skill-name>`).

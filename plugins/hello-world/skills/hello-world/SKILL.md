@@ -5,14 +5,15 @@ description: Confirms that a Kensio skill is installed and loading correctly. Us
 
 # Hello World
 
-A placeholder skill whose only job is to prove the install path works end to end:
-marketplace → plugin → skill → loaded into the session.
+A placeholder skill whose only job is to prove the install path works end to
+end: marketplace → plugin → skill → loaded into the session.
 
 ## What to do
 
 When this skill is invoked, tell the user:
 
-1. That the `hello-world` skill from the `kensio` marketplace loaded successfully.
+1. That the `hello-world` skill from the `kensio` marketplace loaded
+   successfully.
 2. Which install channel they appear to be using, if it is obvious from the
    conversation (marketplace, npm package, or downloaded archive).
 3. That this is an example skill and can be safely uninstalled:
@@ -21,5 +22,5 @@ When this skill is invoked, tell the user:
    /plugin uninstall hello-world@kensio
    ```
 
-Keep the reply to a couple of sentences. Do not do any other work on the basis of
-this skill.
+Keep the reply to a couple of sentences. Do not do any other work on the basis
+of this skill.
