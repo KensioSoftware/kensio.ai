@@ -18,8 +18,6 @@ importers:
         specifier: ^25.0.9
         version: 25.0.9
 
-  plugins/hello-world: {}
-
   plugins/isolated-testing-style: {}
 
   plugins/part-factory-test-data: {}
