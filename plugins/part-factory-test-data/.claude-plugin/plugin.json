@@ -1,0 +1,14 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "part-factory-test-data",
+  "version": "1.0.0",
+  "description": "How to build test data with @kensio/part-factory, covering which factory to reach for, when a mapped factory earns its place, and why factories belong beside the type they construct.",
+  "author": {
+    "name": "Kensio Software",
+    "email": "hugh@kensiosoftware.co.uk"
+  },
+  "homepage": "https://kensio.ai",
+  "repository": "https://github.com/KensioSoftware/kensio.ai",
+  "license": "Apache-2.0",
+  "keywords": ["testing", "test-data", "factory", "part-factory", "faker"]
+}

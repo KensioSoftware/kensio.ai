@@ -1,0 +1,14 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "skill-template",
+  "version": "1.0.0",
+  "description": "A copy-and-edit starting point for writing a new Claude Code skill, covering SKILL.md frontmatter, description wording, and progressive disclosure.",
+  "author": {
+    "name": "Kensio Software",
+    "email": "hugh@kensiosoftware.co.uk"
+  },
+  "homepage": "https://kensio.ai",
+  "repository": "https://github.com/KensioSoftware/kensio.ai",
+  "license": "Apache-2.0",
+  "keywords": ["example", "template", "authoring"]
+}

@@ -1,0 +1,67 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "kensio",
+  "description": "Claude Code skills from Kensio Software — reusable, opinionated ways of working, packaged as installable plugins.",
+  "owner": {
+    "name": "Kensio Software",
+    "email": "hugh@kensiosoftware.co.uk",
+    "url": "https://kensio.ai"
+  },
+  "plugins": [
+    {
+      "name": "isolated-testing-style",
+      "description": "An opinionated testing style: real collaborators through simulation instead of stubs, isolation from randomised data instead of setup and teardown, and assertions on behaviour instead of call counts.",
+      "source": "./plugins/isolated-testing-style",
+      "author": {
+        "name": "Kensio Software",
+        "email": "hugh@kensiosoftware.co.uk"
+      },
+      "category": "testing",
+      "tags": ["testing", "vitest", "typescript", "test-style"]
+    },
+    {
+      "name": "yulin-aws-simulation",
+      "description": "How to test AWS code well with the @kensio/yulin in-process simulator, covering SDK interception, deploying real synthesized CloudFormation templates, and handling what the simulator refuses.",
+      "source": "./plugins/yulin-aws-simulation",
+      "author": {
+        "name": "Kensio Software",
+        "email": "hugh@kensiosoftware.co.uk"
+      },
+      "category": "testing",
+      "tags": ["testing", "aws", "yulin", "cdk", "cloudformation"]
+    },
+    {
+      "name": "part-factory-test-data",
+      "description": "How to build test data with @kensio/part-factory, covering which factory to reach for, when a mapped factory earns its place, and why factories belong beside the type they construct.",
+      "source": "./plugins/part-factory-test-data",
+      "author": {
+        "name": "Kensio Software",
+        "email": "hugh@kensiosoftware.co.uk"
+      },
+      "category": "testing",
+      "tags": ["testing", "test-data", "factory", "part-factory", "faker"]
+    },
+    {
+      "name": "hello-world",
+      "description": "A minimal example skill that demonstrates the shape of a Kensio plugin. Use it to verify that the marketplace is wired up correctly.",
+      "source": "./plugins/hello-world",
+      "author": {
+        "name": "Kensio Software",
+        "email": "hugh@kensiosoftware.co.uk"
+      },
+      "category": "productivity",
+      "tags": ["example", "hello-world"]
+    },
+    {
+      "name": "skill-template",
+      "description": "A copy-and-edit starting point for writing a new Claude Code skill, covering SKILL.md frontmatter, description wording, and progressive disclosure.",
+      "source": "./plugins/skill-template",
+      "author": {
+        "name": "Kensio Software",
+        "email": "hugh@kensiosoftware.co.uk"
+      },
+      "category": "productivity",
+      "tags": ["example", "template", "authoring"]
+    }
+  ]
+}
