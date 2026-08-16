@@ -1,56 +1,80 @@
-name: Release
-
+---
 # Every merge to main is a candidate release. semantic-release reads the
-# conventional-commit subjects since the last tag, decides the next version (or
-# decides there is nothing to release), writes it into all eleven manifests, tags
-# it, and opens a GitHub release.
+# conventional-commit subjects since the last tag, decides the next version — or
+# decides there is nothing to release — writes it into all eleven manifests,
+# tags it, and opens a GitHub release.
+#
+# The version bump then goes back to main as a pull request rather than a push.
+# The main ruleset requires pull requests and two status checks, and the
+# built-in GitHub Actions app cannot be added to its bypass list: GitHub rejects
+# it with "must be part of the ruleset source or owner organization", because it
+# is not an app installed in the organization. Tags are unaffected, since the
+# ruleset targets refs/heads/main only, so semantic-release still tags and
+# releases directly.
+#
+# That pull request matters more here than it would elsewhere. The marketplace
+# serves plugin.json from main, so until it merges, the tag and the registry are
+# ahead of what anyone installing the marketplace actually sees.
 #
 # npm publishing is gated on the PUBLISH_NPM repository variable — see
 # scripts/publish-npm.mjs.
+
+name: Release
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
-# Never let two releases race for the same tag.
+defaults:
+  run:
+    shell: bash
+
+# Never let two releases race for the same tag, and never cancel one part-way:
+# a run killed between tagging and publishing leaves a version that exists in
+# git and not on the registry.
 concurrency:
   group: release
   cancel-in-progress: false
 
-permissions:
-  contents: write # push the version bump, create the tag and the release
-  issues: write # semantic-release comments on released issues
-  pull-requests: write # and on released pull requests
-  id-token: write # npm trusted publishing, and provenance attestation
+permissions: {}
 
 jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write # push the tag and create the release
+      issues: write # semantic-release comments on released issues
+      pull-requests: write # and on released pull requests, and opens the bump PR
+      id-token: write # npm trusted publishing, and provenance attestation
+
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # semantic-release needs the full history and tags
+          fetch-depth: 0 # semantic-release works out the version from the tags
+
+      - uses: pnpm/action-setup@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: npm
+          node-version-file: .nvmrc
+          cache: pnpm
           registry-url: https://registry.npmjs.org
 
-      # Trusted publishing needs npm >= 11.5.1; the runner's bundled npm is older.
+      # Trusted publishing needs npm >= 11.5.1, and npm is what publishes here
+      # even though pnpm owns dependencies. See scripts/publish-npm.mjs.
       - name: Update npm
         run: npm install -g npm@latest
 
       - name: Install workspaces
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       # Newer npm blocks install scripts unless the package is named, and the
       # claude CLI fetches its native binary from a postinstall. Without this the
-      # install "succeeds" and then every `claude` call fails, which is how the
-      # first release run died. The version check turns that into a loud failure
-      # at the point of cause.
+      # install "succeeds" and then every `claude` call fails. The version check
+      # turns that into a loud failure at the point of cause.
       - name: Install Claude Code CLI
         run: |
           npm install -g --allow-scripts=@anthropic-ai/claude-code @anthropic-ai/claude-code
@@ -58,14 +82,49 @@ jobs:
 
       # Never tag or publish something that would not have passed on a PR.
       - name: Check
-        run: npm run check
+        run: pnpm check
 
-      # v1.1.0 is tagged by hand as the baseline, marking the last state of the
-      # repository under hand-managed versions. Every tag after it comes from
-      # here. Without a tag to measure from, semantic-release would start again
-      # at 1.0.0 and regress plugins already past it.
       - name: Release
-        run: npx semantic-release
+        run: pnpm exec semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PUBLISH_NPM: ${{ vars.PUBLISH_NPM }}
+
+      # A dirty tree is the signal that a release happened: set-version.mjs only
+      # runs in semantic-release's prepare step, and only when there is a version
+      # to prepare.
+      - name: Send the version bump back to main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$(git status --porcelain)" ]]; then
+            echo "Nothing was released, so there is no version to write back."
+            exit 0
+          fi
+
+          VERSION="$(node -p "require('./package.json').version")"
+          BRANCH="release/v$VERSION"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch --create "$BRANCH"
+          git commit --all --message "chore: version $VERSION"
+          git push origin "$BRANCH"
+
+          # --body-file rather than --body, so the markdown is not at the mercy
+          # of how this block is indented.
+          cat > "$RUNNER_TEMP/pr-body.md" <<EOF
+          [$VERSION](https://github.com/KensioSoftware/kensio.ai/releases/tag/v$VERSION) is tagged and released. This is the part that belongs on main: every manifest set to $VERSION.
+
+          **This one does need merging.** The marketplace serves \`plugin.json\` from main, so until it lands, anyone installing from the marketplace still sees the previous version.
+
+          Opened by the release workflow, so the required checks cannot post against it — a pull request created with \`GITHUB_TOKEN\` does not trigger workflow runs. Merge it with your admin bypass.
+          EOF
+
+          gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "chore: version $VERSION" \
+            --body-file "$RUNNER_TEMP/pr-body.md"

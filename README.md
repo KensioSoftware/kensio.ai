@@ -70,7 +70,7 @@ other two are tools that serve it.
 
 ## Repository layout
 
-An npm workspaces monorepo. The `plugins/` directory serves double duty: it is both the workspace
+A pnpm workspace monorepo. The `plugins/` directory serves double duty: it is both the workspace
 glob and the set of relative-path sources in the marketplace catalog.
 
 ```
@@ -86,7 +86,7 @@ kensio.ai/
 │           └── <skill-name>/
 │               └── SKILL.md
 ├── scripts/                      # validation helpers
-└── package.json                  # workspaces: ["plugins/*"]
+└── pnpm-workspace.yaml           # packages: ["plugins/*"]
 ```
 
 Each plugin folder must be **self-contained** — no `../` references outside it. Plugins get copied,
@@ -101,17 +101,17 @@ walkthrough. In short: create `plugins/<skill-name>/` with the layout above, add
 ## Development
 
 ```bash
-npm install
-npm run check
+pnpm install
+pnpm check
 ```
 
-- `npm run format` — formats JSON, Markdown and JavaScript with
-  [oxfmt](https://oxc.rs/docs/guide/usage/formatter). `npm run format:check` is the read-only
-  version CI runs.
-- `npm run validate` — runs `claude plugin validate --strict` against the marketplace manifest and
+- `pnpm format` — formats JSON, Markdown and JavaScript with
+  [oxfmt](https://oxc.rs/docs/guide/usage/formatter). `pnpm format:check` is the read-only version
+  CI runs.
+- `pnpm validate` — runs `claude plugin validate --strict` against the marketplace manifest and
   every plugin it lists. Requires the Claude Code CLI (`npm install -g @anthropic-ai/claude-code`);
   no authentication needed.
-- `npm run check:versions` — asserts that every `plugin.json` and `package.json` carries the same
+- `pnpm check:versions` — asserts that every `plugin.json` and `package.json` carries the same
   version as the root `package.json`, that names match their folder, and that the marketplace
   catalog and `plugins/` directory agree.
 
@@ -121,8 +121,8 @@ hand, and `embeddedLanguageFormatting: "off"` leaves fenced code samples exactly
 those are hand-tuned illustrations rather than code to be normalised.
 
 Both run in CI on every push and pull request
-([`.github/workflows/validate.yml`](.github/workflows/validate.yml)), along with a
-`npm pack --dry-run` over the workspaces.
+([`.github/workflows/validate.yml`](.github/workflows/validate.yml)), along with an
+`npm pack --dry-run` over each plugin directory.
 
 ## Releasing
 
@@ -145,6 +145,18 @@ the string the version is derived from is always one that has been checked.
 | `feat: …`                       | minor             |
 | `feat!: …` or `BREAKING CHANGE` | major             |
 | `docs: …`, `chore: …`, `ci: …`  | no release at all |
+
+### The version bump comes back as a pull request
+
+The `main` ruleset requires pull requests, and the built-in GitHub Actions app cannot be added to
+its bypass list — GitHub rejects it, because it is not an app installed in the organisation. Tags
+are unaffected, since the ruleset targets `refs/heads/main` only, so the release still tags and
+publishes directly and only the manifest bump needs a pull request.
+
+**That pull request does need merging.** The marketplace serves `plugin.json` from `main`, so until
+it lands, the tag and the registry are ahead of what anyone installing from the marketplace sees. It
+is opened by the release workflow, so the required checks cannot post against it — a pull request
+created with `GITHUB_TOKEN` does not trigger workflow runs — and it is merged with an admin bypass.
 
 ### One version, everywhere
 
