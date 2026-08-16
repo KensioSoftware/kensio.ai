@@ -21,6 +21,9 @@ jobs:
       - name: Install workspaces
         run: npm ci
 
+      - name: Check formatting
+        run: npm run format:check
+
       - name: Install Claude Code CLI
         run: npm install -g @anthropic-ai/claude-code
 

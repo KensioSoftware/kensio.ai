@@ -62,13 +62,13 @@ Not available yet.
 
 ## Available skills
 
-| Skill | npm | What it does |
-| --- | --- | --- |
+| Skill                                                      | npm                              | What it does                                                                                    |
+| ---------------------------------------------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------- |
 | [`isolated-testing-style`](plugins/isolated-testing-style) | `@kensio/isolated-testing-style` | Real collaborators through simulation, isolation from randomised data, assertions on behaviour. |
-| [`yulin-aws-simulation`](plugins/yulin-aws-simulation) | `@kensio/yulin-aws-simulation` | Testing AWS code with the [Yulin](https://yulinsim.dev/) in-process simulator. |
-| [`part-factory-test-data`](plugins/part-factory-test-data) | `@kensio/part-factory-test-data` | Building test data with [Part Factory](https://partfactory.dev/). |
-| [`hello-world`](plugins/hello-world) | `@kensio/hello-world` | Minimal example that confirms the install path works. |
-| [`skill-template`](plugins/skill-template) | `@kensio/skill-template` | Copy-and-edit starting point for writing a new skill. |
+| [`yulin-aws-simulation`](plugins/yulin-aws-simulation)     | `@kensio/yulin-aws-simulation`   | Testing AWS code with the [Yulin](https://yulinsim.dev/) in-process simulator.                  |
+| [`part-factory-test-data`](plugins/part-factory-test-data) | `@kensio/part-factory-test-data` | Building test data with [Part Factory](https://partfactory.dev/).                               |
+| [`hello-world`](plugins/hello-world)                       | `@kensio/hello-world`            | Minimal example that confirms the install path works.                                           |
+| [`skill-template`](plugins/skill-template)                 | `@kensio/skill-template`         | Copy-and-edit starting point for writing a new skill.                                           |
 
 The first three are meant to be read together. `isolated-testing-style` is the
 philosophy, and the other two are tools that serve it.
@@ -111,12 +111,20 @@ npm install
 npm run check
 ```
 
+- `npm run format` — formats JSON, Markdown and JavaScript with
+  [oxfmt](https://oxc.rs/docs/guide/usage/formatter). `npm run format:check`
+  is the read-only version CI runs.
 - `npm run validate` — runs `claude plugin validate --strict` against the marketplace
   manifest and every plugin it lists. Requires the Claude Code CLI
   (`npm install -g @anthropic-ai/claude-code`); no authentication needed.
 - `npm run check:versions` — asserts that each plugin's `plugin.json` and
   `package.json` carry the same version, that names match their folder, and that the
   marketplace catalog and `plugins/` directory agree.
+
+Formatter settings live in [`.oxfmtrc.json`](.oxfmtrc.json). Two of them are
+deliberate: `proseWrap: "preserve"` stops prose in `SKILL.md` being reflowed, and
+`embeddedLanguageFormatting: "off"` leaves fenced code samples exactly as written,
+since those are hand-tuned illustrations rather than code to be normalised.
 
 Both run in CI on every push and pull request
 ([`.github/workflows/validate.yml`](.github/workflows/validate.yml)), along with a
