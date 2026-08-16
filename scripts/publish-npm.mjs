@@ -16,6 +16,10 @@
 //
 // Each plugin directory is published on its own, which also means this does not
 // depend on a "workspaces" field that pnpm does not read.
+//
+// The directories are passed as "./plugins/<name>". The "./" is load-bearing:
+// npm parses a bare "plugins/<name>" as the GitHub shorthand owner/repo and
+// tries to clone github.com/plugins/<name>.git.
 
 import { spawnSync } from "node:child_process";
 import { readdirSync } from "node:fs";
@@ -44,7 +48,7 @@ const failed = [];
 for (const plugin of plugins) {
   const published = spawnSync(
     "npm",
-    ["publish", join("plugins", plugin), "--access", "public", "--provenance"],
+    ["publish", `./plugins/${plugin}`, "--access", "public", "--provenance"],
     { cwd: root, stdio: "inherit" },
   );
   if (published.status !== 0) failed.push(plugin);

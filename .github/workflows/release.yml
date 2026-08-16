@@ -44,6 +44,19 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
 
+    # npm's trusted publisher binds to owner, repository and workflow filename,
+    # but not to a ref — so on its own it would let any run of this file publish,
+    # including a modified copy on a branch dispatched by hand. The environment
+    # closes that: its deployment rule allows main only, so a run from anywhere
+    # else cannot enter it and fails before reaching npm publish. The name is
+    # also an OIDC claim, and must match the Environment field on each package's
+    # trusted publisher on npmjs.com.
+    #
+    # It carries no reviewers or wait timer deliberately. A protection rule that
+    # waits for a human would stall every release at the point where the tag
+    # exists and the registry has not caught up.
+    environment: release
+
     permissions:
       contents: write # push the tag and create the release
       issues: write # semantic-release comments on released issues
