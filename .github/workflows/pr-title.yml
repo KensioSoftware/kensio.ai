@@ -1,3 +1,4 @@
+---
 name: PR title
 
 # Merges are squash-only and the squash title is the PR title, so the PR title is

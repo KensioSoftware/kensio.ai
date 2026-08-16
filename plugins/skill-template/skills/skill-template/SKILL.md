@@ -37,7 +37,7 @@ are copied, zipped, and installed standalone, so those paths will not resolve.
 5. Write `skills/<skill-name>/SKILL.md` (see frontmatter below).
 6. Add an entry to `.claude-plugin/marketplace.json` with a matching `name`, a `source` of
    `"./plugins/<skill-name>"`, and a description.
-7. Run `npm run check`.
+7. Run `pnpm check`.
 
 ## SKILL.md frontmatter
 

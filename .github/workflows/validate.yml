@@ -1,3 +1,4 @@
+---
 name: Validate
 
 on:
@@ -6,17 +7,27 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   validate:
     name: Validate manifests
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: npm
+          node-version-file: .nvmrc
+          cache: pnpm
 
       # Matches the release workflow, which needs npm >= 11.5.1 for trusted
       # publishing. Keeping both on the same npm is what makes a green PR
@@ -25,10 +36,10 @@ jobs:
         run: npm install -g npm@latest
 
       - name: Install workspaces
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Check formatting
-        run: npm run format:check
+        run: pnpm format:check
 
       # Named explicitly because newer npm blocks install scripts by default, and
       # the claude CLI fetches its native binary from a postinstall. The version
@@ -40,10 +51,16 @@ jobs:
           claude --version
 
       - name: Validate marketplace and plugin manifests
-        run: npm run validate
+        run: pnpm validate
 
       - name: Check plugin and package versions agree
-        run: npm run check:versions
+        run: pnpm check:versions
 
+      # Packed per directory with npm rather than `pnpm pack -r`, to match how
+      # publish-npm.mjs actually publishes, and because `pnpm pack -r` also packs
+      # the private root.
       - name: Check each plugin packs cleanly
-        run: npm pack --workspaces --dry-run
+        run: |
+          for plugin in plugins/*/; do
+            npm pack --dry-run "$plugin"
+          done
