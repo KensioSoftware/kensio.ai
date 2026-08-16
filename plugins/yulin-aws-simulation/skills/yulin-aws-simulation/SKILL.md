@@ -7,43 +7,43 @@ description: Use the @kensio/yulin in-process AWS simulator well when testing AW
 
 [Yulin](https://yulinsim.dev/) (`@kensio/yulin`) simulates AWS in process, in memory, with no
 network and no AWS account. Its own docs are the authority on the API. This skill covers how to use
-it well, which is mostly not in the API.
+it well, and that lives mostly outside the API.
 
 Read the package docs for anything API-shaped:
 [the README](https://github.com/KensioSoftware/yulin#readme), `docs/sdk/` for interception, and
 `docs/services/<name>/` for each simulated service.
 
-This skill serves the `isolated-testing-style` skill, which is the general argument for simulation
-over stubs.
+This skill serves the `isolated-testing-style` skill, the general argument for simulation over
+stubs.
 
 Yulin is deliberately flexible, and plenty of shapes work. What follows is the recommended way to
-get the most out of it rather than a set of rules: each one says what it buys, so a situation that
-does not want that trade can go the other way knowingly.
+get the most out of it, not a set of rules. Each one says what it buys. A situation that does not
+want that trade can go the other way knowingly.
 
 ## Use what Yulin already gives you
 
 The most common way to go wrong with Yulin is to build something on top of it. The failure looks
 like a `TestAwsEnvironment` class, a `setupSimulatedAws()` helper returning six things, a factory
-per service, or a `beforeEach` that reassembles the world — a private framework wrapped around a
-tool that is already the framework.
+per service, or a `beforeEach` that reassembles the world (a private framework wrapped around a tool
+that is already the framework.
 
 It is worth resisting, because Yulin is built to be used directly:
 
-- `new SimAws()` and `new SimSdk()` are plain constructors. No side effects, no network, nothing to
-  undo, nothing to await. Creating a simulation per test costs approximately nothing.
+- `new SimAws()` and `new SimSdk()` are plain constructors. No side effects, no network, no cleanup
+  and no awaiting. Creating a simulation per test is close to free.
 - Service accessors take the same Command objects the AWS SDK does, so seeding and asserting need no
   translation layer of their own.
 - `using simSdk = new SimSdk()` is the teardown.
 - `deployTemplateFile` is the environment.
 
-So the recommended shape of a test is: construct, deploy if a template is involved, intercept,
+So the recommended shape of a test is to construct, deploy if a template is involved, intercept,
 exercise, then assert by reading the simulation back. A wrapper around any of those steps hides the
 one thing a reader of the test needs to see, and it has to be maintained forever after.
 
 If a sequence genuinely repeats, make it a small function in the same test file, and keep it
-returning the simulation objects themselves rather than a bespoke shape of its own. The point at
-which it wants a class, an options interface, or a directory, it has stopped being test setup and
-become a second product.
+returning the simulation objects themselves, not a bespoke shape of its own. The point at which it
+wants a class, an options interface, or a directory, it has stopped being test setup and become a
+second product.
 
 ## One synthesized template, for tests, local dev and production
 
@@ -65,26 +65,26 @@ Deploying the synthesized output means a construct change that breaks the system
 The same argument extends past the test suite. A dev environment that creates its buckets and tables
 by hand is a third description of the infrastructure, drifting away from the other two at its own
 pace, and the drift shows up as a bug that reproduces in exactly one of the three places. Pointing
-the dev server at `cdk.out` as well removes the whole category: what runs locally is what CI tested
+the dev server at `cdk.out` as well removes the whole category. What runs locally is what CI tested
 and what production deploys, and `watch` turns a `cdk synth` into a stack update in place.
 
 The corollary is that infrastructure belongs in the CDK app even when only a test needs it. A bucket
 conjured in test setup is infrastructure that production does not have.
 
 **Do not hand-roll a wrapper that reads the file and calls `deployTemplate`.** `deployTemplateFile`
-already reads it, and it locates the cloud assembly beside the file, so the assets manifest and
-staged asset directories resolve. A wrapper that reads the JSON itself loses that, and anything
-needing a CDK asset, such as a `Custom::CDKBucketDeployment` or a `Code.fromAsset` function, fails
-with `No CDK assets manifest is available.`
+already reads it, and it locates the cloud assembly beside the file. The assets manifest and staged
+asset directories resolve. A wrapper that reads the JSON itself loses that, and anything needing a
+CDK asset, such as a `Custom::CDKBucketDeployment` or a `Code.fromAsset` function, fails with
+`No CDK assets manifest is available.`
 
 The two options that make a wrapper unnecessary:
 
 - **`transform`** is given the parsed template and answers with the one to deploy. It runs on the
-  deployment and again on every re-read, which is what a wrapper cannot do. Use it for what a
-  simulation genuinely cannot resolve: an ARN carrying a real account, or a hosted zone ID that came
+  deployment and again on every re-read. A wrapper cannot do that. Use it for what a simulation
+  genuinely cannot resolve, such as an ARN carrying a real account, or a hosted zone ID that came
   from `HostedZone.fromLookup`.
 - **`watch`** re-applies the file when it changes, updating the stack in place. This is for dev
-  servers: a `cdk synth` becomes a stack update without restarting the process, and resources the
+  servers. A `cdk synth` becomes a stack update without restarting the process, and resources the
   change left alone keep what they hold.
 
 ```typescript
@@ -113,24 +113,24 @@ A stub asserts that your code called something. The simulator asserts that it ca
 correctly. On a real project, swapping stubs for interception caught two bugs the same afternoon,
 both already in production:
 
-- A Secrets Manager secret whose name ended in a hyphen and six characters, which is exactly the
-  suffix Secrets Manager appends to an ARN. AWS advises against names of that shape because they are
-  ambiguous with the ARN form. A stub has no naming rules, so it had accepted it happily.
+- A Secrets Manager secret whose name ended in a hyphen and six characters, exactly the suffix
+  Secrets Manager appends to an ARN. AWS advises against names of that shape because they are
+  ambiguous with the ARN form. A stub has no naming rules. It had accepted it happily.
 - A Cognito `SECRET_HASH` computed the wrong way. The stub had accepted that too, because a stub is
   never going to verify a signature.
 
-Intercept the class rather than the instance in most cases, since the code under test usually
-constructs its own clients. Intercept an instance when only one client should reach the simulation.
+Intercept the class, not the instance, in most cases, since the code under test usually constructs
+its own clients. Intercept an instance when only one client should reach the simulation.
 
 Each `SimSdk` owns a `SimAws`, reachable as `simSdk.simAws` for seeding and inspecting state. Pass
 an existing one with `new SimSdk({ simAws })` to share.
 
 ### Intercept what the code actually sends through
 
-Interception replaces `send` on the thing it is given, so it has to be given the client the code
-under test actually calls. The wrapper clients are where this bites: a `DynamoDBDocumentClient`
-built over a `DynamoDBClient` is what the code sends through, so it is the document client that
-needs intercepting, not the client underneath it.
+Interception replaces `send` on the thing it is given. It has to be given the client the code under
+test actually calls. The wrapper clients are where this bites. A `DynamoDBDocumentClient` built over
+a `DynamoDBClient` is what the code sends through. It is the document client that needs
+intercepting, not the client underneath it.
 
 ```typescript
 using simSdk = new SimSdk();
@@ -140,7 +140,7 @@ simSdk.intercept(documents); // Not the DynamoDBClient it was built from.
 ```
 
 Every Command through an intercepted client is routed to the simulation by default. An allow list of
-Command classes narrows that, which is worth reaching for only when something else should genuinely
+Command classes narrows that, and is worth reaching for only when something else should genuinely
 handle the rest.
 
 ### Prefer `using` over a teardown step
@@ -172,20 +172,20 @@ microseconds rather than something it waits for or gives up on. A good deal of t
 off that clock: EventBridge rules and Scheduler schedules fire only when time is advanced past them,
 DynamoDB items pass their TTL, Secrets Manager deletions come due, `AssumeRole` sessions expire, and
 Lambda event source mappings re-poll. Inside a simulated Lambda, `Date.now()` and `new Date()`
-report simulated time, so a handler's own expiry logic is exercised without a stub in sight.
+report simulated time. A handler's own expiry logic is exercised without a stub in sight.
 
 That last point is worth drawing out. `isolated-testing-style` allows a stub for a clock, on the
-grounds that a clock has no rules worth modelling. Against Yulin that exception is not needed: the
+grounds that a clock has no rules worth modelling. Against Yulin that exception is unnecessary. The
 clock is part of the simulation, and advancing it exercises the real expiry rules of the services
 around it rather than only the code's own arithmetic.
 
 `simAws.clock().resume()` switches to tracking the underlying clock, and `simAws.clock().isFrozen`
-reports which mode it is in. Running mode suits a local dev server; a test that wants it usually
+reports which mode it is in. Running mode suits a local dev server. A test that wants it usually
 wants an advance instead.
 
 ## Assert by reading the simulation back
 
-The simulation holds real state, so the assertion can read it. After exercising the code, ask the
+The simulation holds real state. The assertion can read it. After exercising the code, ask the
 service what happened rather than asking the SDK what it was told:
 
 ```typescript
@@ -193,11 +193,11 @@ service what happened rather than asking the SDK what it was told:
 const object = await simAws.s3().getObject(new GetObjectCommand({ Bucket: bucket, Key: key }));
 ```
 
-Service accessors take the same Command objects the SDK does, so the seeding and assertion code
-reads like the production code between them.
+Service accessors take the same Command objects the SDK does. The seeding and assertion code reads
+like the production code between them.
 
 This is where simulation pays off over stubs a second time. A call-count assertion holds only for
-today's implementation; a state assertion holds however the handler is rewritten, and it fails if
+today's implementation. A state assertion holds however the handler is rewritten, and it fails if
 the call was made in a way the real service would have rejected.
 
 ## Match service errors by name, not instanceof
@@ -216,13 +216,13 @@ raising its own classes, and it silently stops matching. Yulin's errors carry th
 error names and SDK-shaped `$metadata`, but they are not instances of the SDK classes.
 
 This is worth fixing in production code, not worked around in tests. `name` is what the wire
-carries, so the `name` check is the one that is right in both places. A version skew between two
+carries. The `name` check is the one that is right in both places. A version skew between two
 `@aws-sdk/client-*` packages breaks `instanceof` in production too, just less predictably than the
 simulator does.
 
 ## Expect refusals, and treat them as a feature
 
-Yulin refuses a property it does not simulate rather than ignoring it. That is the right trade:
+Yulin refuses a property it cannot simulate, and never ignores one. That is the right trade.
 silently accepting something that changes real behaviour turns a deploy-time failure into a
 production one.
 
@@ -255,10 +255,10 @@ gap.
 
 When reporting, the asymmetry matters more than the volume:
 
-- A simulator that **stays silent** about something costs nothing. The test does not cover that
-  behaviour, which is where it was already.
+- A simulator that **stays silent** about something costs you little. The test leaves that behaviour
+  uncovered, where it was already.
 - A simulator that **says 200 where production says 403** converts a deploy-time failure into a
-  production one, which is the opposite of what it is for.
+  production one. That is the opposite of what it is for.
 
 So a false pass deserves far more attention than a false refusal. A real example: Yulin authorised a
 Lambda function URL invocation against `lambda:InvokeFunctionUrl` alone. CloudFront origin access
@@ -296,15 +296,15 @@ it("stores an upload", async () => {
 Putting a template deployment in `beforeEach` pays for the whole stack once per test for no
 isolation you did not already have.
 
-A template deployment is the only thing usually worth hoisting. Everything else — the `SimSdk`, a
-seeded row, a bucket key — is cheap enough to build inside the test that needs it, which is also
+A template deployment is the only thing usually worth hoisting. Everything else (the `SimSdk`, a
+seeded row, a bucket key) is cheap enough to build inside the test that needs it, and it is also
 where it is easiest to read. A `beforeEach` that assembles state for tests that do not all want the
 same state is the beginning of the harness this skill opens by arguing against.
 
 ## Run the handler as a real simulated Lambda
 
 Yulin can run an in-process handler as a function in the simulation, rather than calling it
-directly. Its SDK calls are routed into the simulation as the execution role, so the IAM policies in
+directly. Its SDK calls are routed into the simulation as the execution role. The IAM policies in
 the template are exercised too.
 
 Bind a handler to a template function at deploy time with `bindings`:
@@ -316,7 +316,7 @@ await simAws.cloudFormation().deployTemplateFile({
 });
 ```
 
-The handler still runs in process, so it can close over test state and be stepped through in a
+The handler still runs in process. It can close over test state and be stepped through in a
 debugger. The difference from calling it directly is that a missing `s3:PutObject` on the execution
 role now fails the test, at the point AWS would have failed it. A binding can target a function by
 `logicalId`, `functionName`, `arn`, `cdkPath`, or `imageRepository` for a container image function.

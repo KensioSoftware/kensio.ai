@@ -1,0 +1,34 @@
+{
+  "name": "@kensio/technical-prose-style",
+  "version": "1.5.0",
+  "description": "Plain technical prose for docs, READMEs, comments and commit messages: five measured sentence shapes to remove, the style rules that turn out not to matter, and a script that scores prose against Django and Go documentation.",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "claude-code-plugin",
+    "documentation",
+    "kensio",
+    "markdown",
+    "prose",
+    "skill",
+    "style",
+    "technical-writing",
+    "writing"
+  ],
+  "homepage": "https://kensio.ai",
+  "license": "Apache-2.0",
+  "author": "Kensio Software <hugh@kensiosoftware.co.uk>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KensioSoftware/kensio.ai.git",
+    "directory": "plugins/technical-prose-style"
+  },
+  "files": [
+    ".claude-plugin",
+    "skills",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

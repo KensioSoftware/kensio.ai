@@ -1,6 +1,6 @@
 ---
 name: skill-template
-description: Scaffold a new Claude Code skill in this repo — creates the plugin folder, package.json, plugin.json and SKILL.md, and registers it in the marketplace. Use when the user asks to "add a new skill", "create a skill", or "start a new plugin" in the kensio.ai repo.
+description: Scaffold a new Claude Code skill in this repo, creating the plugin folder, package.json, plugin.json and SKILL.md, and registering it in the marketplace. Use when the user asks to "add a new skill", "create a skill", or "start a new plugin" in the kensio.ai repo.
 ---
 
 # Skill Template
@@ -19,53 +19,76 @@ plugins/<skill-name>/
 │   └── plugin.json                     # name, version, description, author
 └── skills/
     └── <skill-name>/
-        └── SKILL.md
+        ├── SKILL.md
+        ├── reference/                  # optional, loaded only when linked to
+        └── scripts/                    # optional, anything the skill runs
 ```
 
-**A plugin folder must be self-contained.** Never reference files outside it with `../` — plugins
-are copied, zipped, and installed standalone, so those paths will not resolve.
+Anything under `skills/` ships, because that is what `package.json` lists in `files`. A script the
+skill runs belongs there, not at the plugin root.
+
+**A plugin folder must be self-contained.** Never reference files outside it with `../`, because
+plugins are copied, zipped, and installed standalone, so those paths will not resolve.
 
 ## Steps
 
 1. Create `plugins/<skill-name>/` following the layout above.
-2. Copy `package.json` from an existing plugin; set `name` to `@kensio/<skill-name>` and the
+2. Copy `package.json` from an existing plugin, then set `name` to `@kensio/<skill-name>` and the
    `repository.directory` to `plugins/<skill-name>`.
-3. Copy `.claude-plugin/plugin.json`; set `name` and `description`.
+3. Copy `.claude-plugin/plugin.json`, then set `name` and `description`.
 4. Set the `version` in both files to whatever the other plugins currently carry. Versions move in
-   lockstep across the whole repo, and the release workflow is what changes them — never pick a new
+   lockstep across the whole repo, and the release workflow is what changes them. Never pick a new
    number by hand.
 5. Write `skills/<skill-name>/SKILL.md` (see frontmatter below).
 6. Add an entry to `.claude-plugin/marketplace.json` with a matching `name`, a `source` of
    `"./plugins/<skill-name>"`, and a description.
-7. Run `pnpm check`.
+7. Run `pnpm check`. This validates the manifests, asserts the lockstep version, and runs the prose
+   gate described below.
+
+Everything else is automatic. `scripts/set-version.mjs` and `scripts/publish-npm.mjs` both read the
+`plugins/` directory, so a new folder is versioned and published to npm on the next release without
+being listed anywhere.
 
 ## SKILL.md frontmatter
 
 ```markdown
 ---
 name: <skill-name>
-description: <what it does, then when to use it — include the words and phrases a user would actually type>
+description: <what it does, then when to use it. Include the words and phrases a user would actually type>
 ---
 ```
 
 - `name` must be kebab-case and match the containing directory.
-- `description` is the _only_ thing Claude sees when deciding whether to load the skill, so it
-  carries the whole triggering burden. State what the skill does, then when to use it, in third
-  person. Concrete trigger phrases beat abstract summaries.
+- `description` is the _only_ thing Claude sees when deciding whether to load the skill. It carries
+  the whole triggering burden. State what the skill does, then when to use it, in third person.
+  Concrete trigger phrases beat abstract summaries.
 - Optional frontmatter worth knowing: `allowed-tools` (restrict the tools the skill may use) and
   `disable-model-invocation: true` (user-invocable only, via `/<skill-name>`).
 
 ## Writing the body
 
-Keep `SKILL.md` short and imperative — it is instructions for Claude, not documentation for a human.
-Push detail into sibling files (`reference.md`, `examples/`) and link to them, so the body stays
-cheap to load and the details are read only when needed.
+Keep `SKILL.md` short and imperative. It is instructions for Claude, not documentation for a human.
+Push detail into sibling files (`reference/`, `examples/`) and link to them. The body stays cheap to
+load and the details are read only when needed.
+
+## Prose
+
+`pnpm check` runs `pnpm prose`, which fails the build on em dashes, semicolons, and five sentence
+shapes measured against Django, Effective Go, the Rust Book and the Python docs. A new `SKILL.md`
+and `README.md` have to pass it.
+
+Load the `technical-prose-style` skill before writing either one. It carries the rules, the
+before-and-after examples, and the evidence for each. Checking a single file while drafting:
+
+```bash
+node plugins/technical-prose-style/skills/technical-prose-style/scripts/prose-check.mjs plugins/<skill-name>
+```
 
 ## Releasing
 
-There is nothing to do. Merging to `main` releases, and the version comes from the pull request
+Releasing is automatic. Merging to `main` releases, and the version comes from the pull request
 title: `fix:` for a patch, `feat:` for a minor, `feat!:` or a `BREAKING CHANGE` footer for a major.
 A `docs:` or `chore:` title releases nothing.
 
-Every plugin is set to the new version together, so a released version means the same commit
-wherever it was installed from.
+Every plugin is set to the new version together. A released version means the same commit wherever
+it was installed from.

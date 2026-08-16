@@ -1,0 +1,225 @@
+# Where the rules came from
+
+The five patterns in `SKILL.md` were selected by comparing human-written and LLM-written technical
+documentation and keeping only what separated them. This file records the method, the numbers, and
+the candidates that were tested and dropped, so the thresholds can be argued with and the study can
+be re-run.
+
+## The corpora
+
+**Human exemplars.** 65,767 words across 15 documents from four independent sources. Four Django
+documentation topics (`db/queries`, `http/urls`, `testing/overview`, `cache`), Effective Go, six
+chapters of the Rust Book, and four Python documentation pages. All four are long-lived technical
+documentation for developer audiences, written and revised by many hands, and all four predate
+widespread LLM drafting.
+
+**LLM corpora.** 192,430 words across 60 documents from three independent sources. The `docs/` tree
+of a TypeScript library, the architecture READMEs under its `src/` tree, and the skills in a
+separate repository. Different projects, different genres, one author model.
+
+It matters that the first LLM corpus was written under a style guide already. That guide banned em
+dashes, marketing language, the rule of three, preambles and long sentences. The guide was followed.
+Em dashes fell to 0.33 per 1000 words and promotional vocabulary almost disappeared. The prose still
+read as machine-written. That is the observation that started this.
+
+Code blocks, inline code, headings, tables, link targets and URLs were stripped from both before
+counting. Hard-wrapped lines were rejoined into paragraphs first, so sentence boundaries survive.
+
+## Patterns kept
+
+| Pattern           | Human /1k | LLM /1k | Ratio |
+| ----------------- | --------- | ------- | ----- |
+| significance-tail | 0.79      | 6.41    | 8.1×  |
+| contrastive-def   | 1.06      | 6.62    | 6.2×  |
+| negation-frame    | 2.04      | 10.50   | 5.2×  |
+| appositive-tail   | 0.59      | 3.15    | 5.3×  |
+| colon-explainer   | 2.05      | 4.74    | 2.3×  |
+
+## How the thresholds were set
+
+Rates are noisy per file, so thresholds come from the distribution rather than the aggregate. For
+each pattern, `fail` is the lowest value that flags **none** of the 15 human documents, and `warn`
+is the 90th percentile of those documents. Banned marks are the exception, described below.
+
+| Pattern           | Baseline | Warn (human p90) | Fail (zero human hits) | LLM files caught |
+| ----------------- | -------- | ---------------- | ---------------------- | ---------------- |
+| significance-tail | 0.79     | 1.7              | 2.3                    | 93%              |
+| contrastive-def   | 1.06     | 2.3              | 4.0                    | 81%              |
+| negation-frame    | 2.04     | 4.6              | 5.0                    | 86%              |
+| appositive-tail   | 0.59     | 1.1              | 1.8                    | 81%              |
+| colon-explainer   | 2.05     | 2.0              | 3.0                    | 77%              |
+
+At the file level, where a document fails if any single pattern fails, the measured patterns at
+their zero-false-positive settings flag **0% of the human documents and 100% of the LLM documents**.
+
+Two later decisions trade some of that away deliberately, and both are house style rather than
+evidence:
+
+| Configuration                                   | Human documents flagged | LLM documents flagged |
+| ----------------------------------------------- | ----------------------- | --------------------- |
+| Measured patterns, zero-false-positive settings | 0 of 15                 | 100%                  |
+| With colon-explainer tightened to 3.0           | 3 of 15                 | 94%                   |
+| With the em dash and semicolon bans             | 15 of 15                | 100%                  |
+
+The bans flag every human document by construction, because Django, the Rust Book and the Python
+docs all use em dashes and semicolons freely. A run with `--no-bans` drops them and re-checks the
+measured separation, which is how the numbers above stay verifiable.
+
+The first calibration used only Django and Effective Go, and set `fail` at three times the mean.
+Once the human corpus was widened that flagged 3 of the 15 human documents, including a Rust Book
+chapter whose subject is contrasting two representations. A style checker that fires on the Rust
+Book is wrong, so the thresholds moved to the rule above.
+
+Colon-explainer is the one place the zero-false-positive rule was overridden deliberately. At a
+threshold no human document trips (6.6) it caught only 27% of LLM documents. It is set to 3.0
+instead, as a house decision to suppress the construction. That costs 3 of the 15 human documents,
+all of them Python pages, which use "term: explanation" heavily. The cost is known and accepted.
+
+## Banned marks
+
+Three marks are house rules rather than measured thresholds. Any occurrence in prose fails.
+
+| Mark               | Human /1k | LLM /1k, unbanned | Note                                        |
+| ------------------ | --------- | ----------------- | ------------------------------------------- |
+| Em dash            | 0.24      | 1.93              | 8× the human rate where no ban was in force |
+| Semicolon          | 2.70      | 1.04              | The human corpus uses these 2.6× more       |
+| Mid-sentence colon | 1.49      | 4.00              | Rate-limited rather than banned, see above  |
+
+The em dash number corrects an earlier reading. Measured only against the corpus that already banned
+em dashes, the mark looked innocent at 0.33 per 1000 words. Measured against LLM prose written
+without that ban, it runs at 1.93 against a human 0.24. The first measurement was recording
+compliance with the ban, not the underlying habit. Banning it is justified.
+
+Semicolons are the opposite case. The human corpus uses them more than twice as often as any LLM
+corpus does. The ban removes almost nothing, and moves the prose slightly toward the machine end of
+the range. It is in place as a house consistency rule, not as a tic detector.
+
+Colons could not be banned outright. At zero tolerance every one of the 15 human documents fails,
+because a mid-sentence colon is ordinary English. A colon ending a line to introduce a list or a
+code block is exempt entirely, and the human corpus uses that form 4.56 per 1000 words against the
+LLM corpus's 1.99.
+
+## Where the construction goes next
+
+Banning one mark moves the construction to the next available one. That is what happened when em
+dashes were banned and colons absorbed the traffic. With all three marks closed, the remaining exits
+worth watching are bracketed asides and comma splices.
+
+| Mark                | Human /1k | LLM /1k |
+| ------------------- | --------- | ------- |
+| Parenthetical aside | 6.19      | 0.15    |
+
+That gap is the largest in the whole study. The human corpus uses bracketed asides 40 times more
+often than the LLM corpus does. Brackets are not a tic to watch for. They are the missing habit, and
+the natural home for a remark that no longer has a dash or a colon to hang from.
+
+A pattern needs at least three occurrences in a file of at least 200 words before it is flagged. A
+rate computed from a single hit says more about the length of the page than about the prose.
+
+## Does it generalise
+
+The first version of this study used one human source pair and one LLM corpus, which is enough to
+find a pattern and not enough to trust it. Both sides were then widened to independent sources the
+thresholds had never seen.
+
+| Corpus                                               | Words   | Files over a fail threshold |
+| ---------------------------------------------------- | ------- | --------------------------- |
+| Django docs, human                                   | 17,244  | 0 of 4                      |
+| Effective Go, human                                  | 12,623  | 0 of 1                      |
+| Rust Book, human, unseen                             | 15,430  | 0 of 6                      |
+| Python docs, human, unseen                           | 20,470  | 0 of 4                      |
+| Library `docs/` tree, LLM                            | 108,000 | 29 of 31                    |
+| Architecture READMEs, LLM, different genre           | 78,000  | 23 of 23                    |
+| Skills in another repository, LLM, different project | 6,200   | 5 of 6                      |
+
+Every pattern held its direction and rough magnitude across all of them. The five rules are not an
+artefact of one project's house style.
+
+## Patterns tested and dropped
+
+Each of these is a common style-guide rule. None of them separated the corpora.
+
+| Candidate                                                                             | Human      | LLM        | Verdict                 |
+| ------------------------------------------------------------------------------------- | ---------- | ---------- | ----------------------- |
+| Mean sentence length                                                                  | 19.8 words | 20.9 words | 1.06×, no signal        |
+| Sentences over 32 words                                                               | 11.7%      | 10.1%      | LLM writes fewer        |
+| AI vocabulary (`delve`, `robust`, `seamless`, `powerful`, `crucial`, `leverage`, ...) | 0.80 /1k   | 0.08 /1k   | LLM scores 10× lower    |
+| Gerund-led sentences                                                                  | 2.36 /1k   | 2.71 /1k   | 1.15×, no signal        |
+| Rule of three, prose only (code spans excluded)                                       | 0.63 /1k   | 0.34 /1k   | LLM writes half as many |
+| Trailing participles (`, leaving X`, `, making Y`)                                    | 0.30 /1k   | 0.14 /1k   | LLM writes half as many |
+
+The vocabulary result is the one worth dwelling on. Django and Effective Go use the words on every
+AI-detector word list ten times more often than the Claude-written corpus does, because those words
+are ordinary English and the corpus had been told to avoid them. A word list is measuring compliance
+with a word list.
+
+Sentence length is the same story from the other side. "Break up long sentences" was in the style
+guide, the corpus obeyed it, and the result was the same clause count packed into shorter sentences
+joined by colons.
+
+## The dependency-parser study
+
+Regexes cannot see grammar, so both corpora were re-measured with a spaCy dependency parse
+(`en_core_web_sm`) to test whether syntactic features detect the tics more accurately.
+
+| Parser feature                            | Human /1k | LLM /1k | Ratio |
+| ----------------------------------------- | --------- | ------- | ----- |
+| Coordination arity 3+ (rule of three)     | 0.78      | 1.89    | 2.4×  |
+| `parataxis` relation                      | 0.49      | 0.07    | 0.14× |
+| Trailing subordinate clause               | 20.41     | 25.48   | 1.25× |
+| Trailing subordinate clause after a comma | 4.28      | 9.49    | 2.2×  |
+| `appos` relation                          | 8.62      | 6.79    | 0.79× |
+| Clauses per sentence                      | 1.42      | 1.37    | 0.96× |
+
+Then the two features that separated the corpora were re-tested as plain regexes, to see what the
+parse was buying:
+
+| Feature              | Parse ratio | Regex ratio                                    |
+| -------------------- | ----------- | ---------------------------------------------- |
+| Comma-plus-`so` tail | 2.2×        | **8.2×**                                       |
+| Rule of three        | 2.4×        | 2.6×, then 0.54× once code lists were excluded |
+
+The regex wins, and the reason generalises. A parser recognises a whole grammatical class, and that
+class contains all the legitimate uses along with the tic. Trailing subordinate clauses are ordinary
+English at 1.25×. The tic is one narrow collocation inside that class, and grammatical generality
+dilutes it. Adding a parser made detection worse.
+
+The parse earned its cost as a research instrument. It falsified four candidate rules that sound
+right, including two that had been written into a style guide. Use it to find and kill candidates,
+then ship regexes.
+
+Two traps it exposed, both worth repeating:
+
+- **Dialect masquerading as a tic.** "X, Y and Z" without the Oxford comma separates the corpora at
+  4.7×. The exemplars are American and take the Oxford comma. The LLM corpus was written in British
+  English. That measurement detects nationality.
+- **Markup masquerading as prose.** Rule of three separates at 2.6× until code spans are excluded,
+  at which point it inverts to 0.54×. The whole signal was lists of API names.
+
+## Re-running the study
+
+The point of a measured style guide is that it can be re-measured. To recalibrate against a
+different exemplar corpus, or to check whether a new candidate pattern earns its place:
+
+1. Collect exemplar prose in markdown, or adapt the stripping in `prose-check.mjs` for the format.
+   Prefer documents written before 2022, since anything newer may itself be LLM-drafted.
+2. Score both corpora with `--json`. Report the aggregate ratio by total words, and keep the
+   per-file rates for step 4.
+3. Keep a candidate only where the aggregate ratio clears 2×.
+4. Set `fail` to the lowest value that flags no human document, and `warn` to the human 90th
+   percentile. Report what fraction of LLM documents that catches. A threshold below the human
+   maximum is a bug, however good the aggregate ratio looks.
+5. Use at least three independent sources on each side. Two sources cannot tell a real pattern from
+   a house style.
+
+A pattern that fires on prose you consider good is a bad pattern, however plausible the rule behind
+it sounds. Every dropped candidate above sounded plausible, and two of them were already being
+enforced as style rules.
+
+## On distilling from a rewriting tool
+
+Feeding bad passages through a third-party rewriter and mining the diffs is a reasonable way to
+generate candidate patterns. It is a poor way to decide which ones to keep, because the tool's own
+preferences arrive along with the improvements, and there is no way to tell one from the other. The
+measurement above is the filter: generate candidates however you like, then keep the ones that
+separate real human prose from your own output.

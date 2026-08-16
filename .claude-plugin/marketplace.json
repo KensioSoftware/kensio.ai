@@ -42,6 +42,17 @@
       "tags": ["testing", "test-data", "factory", "part-factory", "faker"]
     },
     {
+      "name": "technical-prose-style",
+      "description": "Plain technical prose for docs, READMEs, comments and commit messages: five measured sentence shapes to remove, the style rules that turn out not to matter, and a script that scores prose against Django and Go documentation.",
+      "source": "./plugins/technical-prose-style",
+      "author": {
+        "name": "Kensio Software",
+        "email": "hugh@kensiosoftware.co.uk"
+      },
+      "category": "documentation",
+      "tags": ["writing", "documentation", "prose", "style", "markdown"]
+    },
+    {
       "name": "skill-template",
       "description": "A copy-and-edit starting point for writing a new Claude Code skill, covering SKILL.md frontmatter, description wording, and progressive disclosure.",
       "source": "./plugins/skill-template",
