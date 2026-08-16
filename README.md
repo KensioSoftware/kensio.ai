@@ -190,9 +190,9 @@ first version of every package is published by hand, from a clean checkout of th
 for plugin in plugins/*/; do npm publish "./$plugin" --access public; done
 ```
 
-The `./` prefix is not optional — npm reads a bare `plugins/<name>` as the GitHub shorthand
+The `./` prefix is load-bearing. npm reads a bare `plugins/<name>` as the GitHub shorthand
 `owner/repo` and tries to clone it. That first version carries no provenance attestation, because
-provenance is minted from the workflow's OIDC token and there is no workflow involved; every version
+provenance is minted from the workflow's OIDC token and there is no workflow involved. Every version
 after it does.
 
 Then, for each package, under **Settings → Trusted Publisher** on npmjs.com:
@@ -210,9 +210,9 @@ successfully and fail at `npm publish`.
 
 #### Why the release job names an environment
 
-A trusted publisher binds to an owner, a repository and a workflow filename — not to a ref. On its
-own that would let any run of `release.yml` publish, including a modified copy pushed to a branch
-and started by hand through `workflow_dispatch`. The `release` environment closes that: its
+A trusted publisher binds to an owner, a repository and a workflow filename, and not to a ref. On
+its own that would let any run of `release.yml` publish, including a modified copy pushed to a
+branch and started by hand through `workflow_dispatch`. The `release` environment closes that: its
 deployment rule allows `main` only, so a run from any other ref cannot enter it and fails before
 reaching `npm publish`. The environment name is itself an OIDC claim, which is why it has to match
 on both sides.
