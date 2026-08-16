@@ -2,21 +2,21 @@
   "name": "@kensio/skill-template",
   "version": "1.0.0",
   "description": "A copy-and-edit starting point for writing a new Claude Code skill, covering SKILL.md frontmatter, description wording, and progressive disclosure.",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "claude-code-plugin",
+    "kensio",
+    "skill"
+  ],
+  "homepage": "https://kensio.ai",
   "license": "Apache-2.0",
   "author": "Kensio Software <hugh@kensiosoftware.co.uk>",
-  "homepage": "https://kensio.ai",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/KensioSoftware/kensio.ai.git",
     "directory": "plugins/skill-template"
   },
-  "keywords": [
-    "claude",
-    "claude-code",
-    "claude-code-plugin",
-    "skill",
-    "kensio"
-  ],
   "files": [
     ".claude-plugin",
     "skills",

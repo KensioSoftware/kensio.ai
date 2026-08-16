@@ -2,21 +2,21 @@
   "name": "@kensio/hello-world",
   "version": "1.0.0",
   "description": "A minimal example skill that demonstrates the shape of a Kensio plugin. Use it to verify that the marketplace is wired up correctly.",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "claude-code-plugin",
+    "kensio",
+    "skill"
+  ],
+  "homepage": "https://kensio.ai",
   "license": "Apache-2.0",
   "author": "Kensio Software <hugh@kensiosoftware.co.uk>",
-  "homepage": "https://kensio.ai",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/KensioSoftware/kensio.ai.git",
     "directory": "plugins/hello-world"
   },
-  "keywords": [
-    "claude",
-    "claude-code",
-    "claude-code-plugin",
-    "skill",
-    "kensio"
-  ],
   "files": [
     ".claude-plugin",
     "skills",
