@@ -1,8 +1,9 @@
 #!/usr/bin/env node
-// Each skill is published twice — as an npm package and as a marketplace plugin —
-// from two manifests that each carry their own version string. Claude Code only
-// notices an update when plugin.json's version changes, so the two must be bumped
-// together. This check fails the build when they drift apart.
+// Skills are versioned in lockstep: the root package.json, every plugin's
+// package.json and every plugin's plugin.json carry the same number, so a given
+// version means the same commit on the marketplace and on npm. The release
+// workflow is what moves them, all at once — nothing here should be edited by
+// hand. This check fails the build when any of them drift apart.
 
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
@@ -18,6 +19,8 @@ const listed = new Set((marketplace.plugins ?? []).map((p) => p.name));
 
 const readJson = (path) => JSON.parse(readFileSync(path, "utf8"));
 const problems = [];
+
+const rootVersion = readJson(resolve(root, "package.json")).version;
 
 const dirs = readdirSync(pluginsDir, { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
@@ -46,6 +49,11 @@ for (const dir of dirs) {
       `${dir}: plugin.json version ${plugin.version} !== package.json version ${pkg.version}`,
     );
   }
+  if (plugin.version !== rootVersion) {
+    problems.push(
+      `${dir}: version ${plugin.version} !== root package.json version ${rootVersion} (versions move in lockstep)`,
+    );
+  }
   if (!listed.has(dir)) {
     problems.push(`${dir}: not listed in .claude-plugin/marketplace.json`);
   }
@@ -64,4 +72,4 @@ if (problems.length > 0) {
   process.exit(1);
 }
 
-console.log("\n✔ Versions and names are consistent");
+console.log(`\n✔ Versions and names are consistent, all at ${rootVersion}`);

@@ -41,7 +41,7 @@ claude plugin update hello-world@kensio
 
 ### From npm
 
-Every skill is also published as an independently versioned scoped package:
+Every skill is also published as a scoped package, all sharing one version:
 
 ```bash
 npm install @kensio/hello-world
@@ -79,7 +79,7 @@ kensio.ai/
 │   └── marketplace.json          # the plugin catalog
 ├── plugins/
 │   └── <skill-name>/             # one folder per skill — also an npm package
-│       ├── package.json          # @kensio/<skill-name>, own semver version
+│       ├── package.json          # @kensio/<skill-name>, version set by the release
 │       ├── .claude-plugin/
 │       │   └── plugin.json       # name, description, version, author
 │       └── skills/
@@ -111,9 +111,9 @@ npm run check
 - `npm run validate` — runs `claude plugin validate --strict` against the marketplace manifest and
   every plugin it lists. Requires the Claude Code CLI (`npm install -g @anthropic-ai/claude-code`);
   no authentication needed.
-- `npm run check:versions` — asserts that each plugin's `plugin.json` and `package.json` carry the
-  same version, that names match their folder, and that the marketplace catalog and `plugins/`
-  directory agree.
+- `npm run check:versions` — asserts that every `plugin.json` and `package.json` carries the same
+  version as the root `package.json`, that names match their folder, and that the marketplace
+  catalog and `plugins/` directory agree.
 
 Formatter settings live in [`.oxfmtrc.json`](.oxfmtrc.json). Two of them are deliberate:
 `proseWrap: "always"` rewraps Markdown prose at `printWidth`, so paragraphs never need wrapping by
@@ -126,19 +126,48 @@ Both run in CI on every push and pull request
 
 ## Releasing
 
-A skill's version lives in two places and both must move together — npm reads `package.json`, Claude
-Code reads `plugin.json`:
+Releases are automatic. Every merge to `main` runs [`release.yml`](.github/workflows/release.yml),
+which reads the conventional-commit subjects since the last tag, works out the next version, and
+either releases it or does nothing.
+
+**Do not edit version numbers by hand.** The release decides them, and
+[`check-versions.mjs`](scripts/check-versions.mjs) fails the build if they drift.
+
+### How the version is decided
+
+The PR title is the commit subject that lands on `main`, because merges are squash-only and the
+squash title is set to the PR title. [`pr-title.yml`](.github/workflows/pr-title.yml) lints it, so
+the string the version is derived from is always one that has been checked.
+
+| PR title                        | Effect            |
+| ------------------------------- | ----------------- |
+| `fix: …` or `perf: …`           | patch             |
+| `feat: …`                       | minor             |
+| `feat!: …` or `BREAKING CHANGE` | major             |
+| `docs: …`, `chore: …`, `ci: …`  | no release at all |
+
+### One version, everywhere
+
+All eleven manifests — the root `package.json`, and each plugin's `package.json` and `plugin.json` —
+carry the same number, written by [`set-version.mjs`](scripts/set-version.mjs). A version therefore
+means the same commit whether it came from the marketplace or from npm.
+
+The trade-off is that a release republishes every plugin, so Claude Code offers an update for
+plugins that did not change. That is deliberate: lockstep versions are much easier to reason about
+than five independent ones, and the packages are small.
+
+### npm publishing
+
+Publishing is gated on the `PUBLISH_NPM` repository variable, so the workflow can be exercised
+before anything becomes permanent on npm. Until it is set, releases are tagged on GitHub only:
 
 ```bash
-npm version patch --workspace @kensio/<skill-name>
+gh variable set PUBLISH_NPM --body true
 ```
 
-Mirror that version into `plugins/<skill-name>/.claude-plugin/plugin.json`, run `npm run check`,
-commit, then tag the release:
-
-```bash
-claude plugin tag plugins/<skill-name> --push
-```
+Authentication is npm [trusted publishing](https://docs.npmjs.com/trusted-publishers) over OIDC —
+there is no npm token in this repository. Each package needs its trusted publisher configured once
+on npmjs.com before it can be published this way.
 
 ## Licence
 

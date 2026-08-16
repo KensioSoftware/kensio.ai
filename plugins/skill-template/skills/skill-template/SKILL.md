@@ -28,14 +28,16 @@ are copied, zipped, and installed standalone, so those paths will not resolve.
 ## Steps
 
 1. Create `plugins/<skill-name>/` following the layout above.
-2. Copy `package.json` from an existing plugin; set `name` to `@kensio/<skill-name>`, `version` to
-   `1.0.0`, and the `repository.directory` to `plugins/<skill-name>`.
-3. Copy `.claude-plugin/plugin.json`; set `name`, `description` and `version`. Keep the version
-   identical to `package.json` — `npm run check:versions` enforces this.
-4. Write `skills/<skill-name>/SKILL.md` (see frontmatter below).
-5. Add an entry to `.claude-plugin/marketplace.json` with a matching `name`, a `source` of
+2. Copy `package.json` from an existing plugin; set `name` to `@kensio/<skill-name>` and the
+   `repository.directory` to `plugins/<skill-name>`.
+3. Copy `.claude-plugin/plugin.json`; set `name` and `description`.
+4. Set the `version` in both files to whatever the other plugins currently carry. Versions move in
+   lockstep across the whole repo, and the release workflow is what changes them — never pick a new
+   number by hand.
+5. Write `skills/<skill-name>/SKILL.md` (see frontmatter below).
+6. Add an entry to `.claude-plugin/marketplace.json` with a matching `name`, a `source` of
    `"./plugins/<skill-name>"`, and a description.
-6. Run `npm run validate` and `npm run check:versions`.
+7. Run `npm run check`.
 
 ## SKILL.md frontmatter
 
@@ -61,15 +63,9 @@ cheap to load and the details are read only when needed.
 
 ## Releasing
 
-Claude Code only detects an update when the `version` string in `plugin.json` changes, so bump it on
-every release, in step with `package.json`.
+There is nothing to do. Merging to `main` releases, and the version comes from the pull request
+title: `fix:` for a patch, `feat:` for a minor, `feat!:` or a `BREAKING CHANGE` footer for a major.
+A `docs:` or `chore:` title releases nothing.
 
-```bash
-npm version patch --workspace @kensio/<skill-name>
-```
-
-Then mirror that version into `plugin.json`, commit, and tag:
-
-```bash
-claude plugin tag plugins/<skill-name> --push
-```
+Every plugin is set to the new version together, so a released version means the same commit
+wherever it was installed from.

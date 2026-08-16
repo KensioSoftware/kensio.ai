@@ -1,6 +1,6 @@
 {
   "name": "@kensio/hello-world",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A minimal example skill that demonstrates the shape of a Kensio plugin. Use it to verify that the marketplace is wired up correctly.",
   "keywords": [
     "claude",
