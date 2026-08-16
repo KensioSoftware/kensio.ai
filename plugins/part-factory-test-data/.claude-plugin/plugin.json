@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "part-factory-test-data",
-  "version": "1.5.0",
+  "version": "1.6.1",
   "description": "How to build test data with @kensio/part-factory: keeping in the factory everything a test does not care about, passing dependencies at call time so factories stay independent and shareable, and choosing between its static, dynamic, variant and mapped factories.",
   "author": {
     "name": "Kensio Software",

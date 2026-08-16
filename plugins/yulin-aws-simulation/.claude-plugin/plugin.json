@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "yulin-aws-simulation",
-  "version": "1.5.0",
+  "version": "1.6.1",
   "description": "How to test AWS code well with the @kensio/yulin in-process simulator: using it directly instead of building a harness around it, driving tests, local dev and production from one synthesized CDK template, intercepting SDK clients, controlling simulated time, and handling what the simulator refuses.",
   "author": {
     "name": "Kensio Software",
