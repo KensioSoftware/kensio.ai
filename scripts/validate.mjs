@@ -14,13 +14,9 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const marketplacePath = resolve(root, ".claude-plugin/marketplace.json");
 
 function validate(target) {
-  const result = spawnSync(
-    "claude",
-    ["plugin", "validate", target, "--strict"],
-    {
-      stdio: "inherit",
-    },
-  );
+  const result = spawnSync("claude", ["plugin", "validate", target, "--strict"], {
+    stdio: "inherit",
+  });
   if (result.error?.code === "ENOENT") {
     console.error(
       "Could not run `claude`. Install it with: npm install -g @anthropic-ai/claude-code",

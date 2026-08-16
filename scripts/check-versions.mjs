@@ -28,8 +28,7 @@ for (const dir of dirs) {
   const packageJsonPath = resolve(pluginsDir, dir, "package.json");
 
   for (const path of [pluginJsonPath, packageJsonPath]) {
-    if (!existsSync(path))
-      problems.push(`${dir}: missing ${path.slice(root.length + 1)}`);
+    if (!existsSync(path)) problems.push(`${dir}: missing ${path.slice(root.length + 1)}`);
   }
   if (!existsSync(pluginJsonPath) || !existsSync(packageJsonPath)) continue;
 
@@ -37,14 +36,10 @@ for (const dir of dirs) {
   const pkg = readJson(packageJsonPath);
 
   if (plugin.name !== dir) {
-    problems.push(
-      `${dir}: plugin.json name is "${plugin.name}", expected "${dir}"`,
-    );
+    problems.push(`${dir}: plugin.json name is "${plugin.name}", expected "${dir}"`);
   }
   if (pkg.name !== `@kensio/${dir}`) {
-    problems.push(
-      `${dir}: package.json name is "${pkg.name}", expected "@kensio/${dir}"`,
-    );
+    problems.push(`${dir}: package.json name is "${pkg.name}", expected "@kensio/${dir}"`);
   }
   if (plugin.version !== pkg.version) {
     problems.push(
@@ -59,9 +54,7 @@ for (const dir of dirs) {
 
 for (const name of listed) {
   if (!dirs.includes(name)) {
-    problems.push(
-      `${name}: listed in marketplace.json but has no plugins/${name} folder`,
-    );
+    problems.push(`${name}: listed in marketplace.json but has no plugins/${name} folder`);
   }
 }
 
