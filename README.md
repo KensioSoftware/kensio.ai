@@ -8,9 +8,9 @@ of working, packaged as installable plugins.
 This repository is the canonical source. Each skill is a self-contained plugin that can be installed
 from the Claude Code marketplace, from npm, or (later) as a downloadable archive.
 
-The first three real skills are a set: `isolated-testing-style` is a way of writing tests, and
+The three testing skills are a set: `isolated-testing-style` is a way of writing tests, and
 `yulin-aws-simulation` and `part-factory-test-data` cover two Kensio packages that serve it.
-`hello-world` and `skill-template` remain as examples that validate the structure end to end.
+`skill-template` is the starting point for writing a new skill.
 
 ## Install
 
@@ -23,20 +23,20 @@ claude plugin marketplace add KensioSoftware/kensio.ai
 Then install the skills you want:
 
 ```bash
-claude plugin install hello-world@kensio
+claude plugin install isolated-testing-style@kensio
 ```
 
 The same commands work as slash commands inside a Claude Code session:
 
 ```
 /plugin marketplace add KensioSoftware/kensio.ai
-/plugin install hello-world@kensio
+/plugin install isolated-testing-style@kensio
 ```
 
 Claude Code only notices an update when a plugin's `version` changes, so pick up new releases with:
 
 ```bash
-claude plugin update hello-world@kensio
+claude plugin update isolated-testing-style@kensio
 ```
 
 ### From npm
@@ -44,7 +44,7 @@ claude plugin update hello-world@kensio
 Every skill is also published as a scoped package, all sharing one version:
 
 ```bash
-npm install @kensio/hello-world
+npm install @kensio/isolated-testing-style
 ```
 
 The package contains the plugin folder as-is (`.claude-plugin/` plus `skills/`), so point Claude
@@ -62,7 +62,6 @@ Zips of each plugin will be published on kensio.ai for machines that have neithe
 | [`isolated-testing-style`](plugins/isolated-testing-style) | `@kensio/isolated-testing-style` | Given/when/then first, real collaborators through simulation, isolation from randomised data. |
 | [`yulin-aws-simulation`](plugins/yulin-aws-simulation)     | `@kensio/yulin-aws-simulation`   | Testing AWS code with the [Yulin](https://yulinsim.dev/) in-process simulator.                |
 | [`part-factory-test-data`](plugins/part-factory-test-data) | `@kensio/part-factory-test-data` | Building test data with [Part Factory](https://partfactory.dev/).                             |
-| [`hello-world`](plugins/hello-world)                       | `@kensio/hello-world`            | Minimal example that confirms the install path works.                                         |
 | [`skill-template`](plugins/skill-template)                 | `@kensio/skill-template`         | Copy-and-edit starting point for writing a new skill.                                         |
 
 The first three are meant to be read together. `isolated-testing-style` is the philosophy, and the
