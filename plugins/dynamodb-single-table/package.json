@@ -1,6 +1,6 @@
 {
   "name": "@kensio/dynamodb-single-table",
-  "version": "1.13.0",
+  "version": "1.13.1",
   "description": "Data modelling for Amazon DynamoDB, starting from one table.",
   "keywords": [
     "agent-skills",
