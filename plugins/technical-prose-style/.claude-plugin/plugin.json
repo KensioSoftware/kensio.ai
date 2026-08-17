@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "technical-prose-style",
-  "version": "1.6.2",
+  "version": "1.7.0",
   "description": "Plain technical prose for docs, READMEs, comments and commit messages: five measured sentence shapes to remove, the style rules that turn out not to matter, and a script that scores prose against Django, Go, Rust and Python documentation.",
   "author": {
     "name": "Kensio Software",

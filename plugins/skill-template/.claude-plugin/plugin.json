@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "skill-template",
-  "version": "1.6.2",
+  "version": "1.7.0",
   "description": "A copy-and-edit starting point for writing a new Claude Code skill, covering SKILL.md frontmatter, description wording, and progressive disclosure.",
   "author": {
     "name": "Kensio Software",

@@ -1,6 +1,6 @@
 {
   "name": "@kensio/part-factory-test-data",
-  "version": "1.6.2",
+  "version": "1.7.0",
   "description": "How to build test data with @kensio/part-factory: keeping in the factory everything a test does not care about, passing dependencies at call time so factories stay independent and shareable, and choosing between its static, dynamic, variant and mapped factories.",
   "keywords": [
     "claude",
