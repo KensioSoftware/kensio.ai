@@ -24,6 +24,8 @@ importers:
 
   plugins/isolated-testing-style: {}
 
+  plugins/pangram-check: {}
+
   plugins/part-factory-test-data: {}
 
   plugins/skill-template: {}

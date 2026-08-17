@@ -1,6 +1,6 @@
 {
   "name": "@kensio/skill-template",
-  "version": "1.11.0",
+  "version": "1.12.0",
   "description": "A copy-and-edit starting point for a new Claude Code skill.",
   "keywords": [
     "claude",
