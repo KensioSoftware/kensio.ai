@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "yulin-aws-simulation",
-  "version": "1.11.0",
+  "version": "1.13.0",
   "description": "How to test AWS code well with the @kensio/yulin in-process simulator.",
   "author": {
     "name": "Kensio Software",
