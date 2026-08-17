@@ -1,9 +1,9 @@
 # Where the rules came from
 
-The five patterns in `SKILL.md` were selected by comparing human-written and LLM-written technical
-documentation and keeping only what separated them. This file records the method, the numbers, and
-the candidates that were tested and dropped, so the thresholds can be argued with and the study can
-be re-run.
+The measured patterns in `SKILL.md` were selected by comparing human-written and LLM-written
+technical documentation and keeping only what separated them. This file records the method, the
+numbers, and the candidates that were tested and dropped, so the thresholds can be argued with and
+the study can be re-run.
 
 ## The corpora
 
@@ -25,29 +25,57 @@ read as machine-written. That is the observation that started this.
 Code blocks, inline code, headings, tables, link targets and URLs were stripped from both before
 counting. Hard-wrapped lines were rejoined into paragraphs first, so sentence boundaries survive.
 
+**The 2026 re-measurement.** `contrastive-coda` and the heading finding below come from a later run
+against a freshly fetched corpus, because the original working files were never committed. That run
+used 19 human documents (85,557 words) from the same four sources, and 13 LLM documents (15,022
+words) from this repository. It reproduced the published `contrastive-def` rate to two decimal
+places (1.05 against 1.06) and put `significance-tail` at 0.60 against the published 0.79, close
+enough on a different document selection to treat the two runs as comparable. The LLM side of that
+run is the weaker half. Every document in it had already been rewritten under the rules in
+`SKILL.md`, so its rates show what survives the style guide. An unguided draft would score higher.
+
 ## Patterns kept
 
 | Pattern           | Human /1k | LLM /1k | Ratio |
 | ----------------- | --------- | ------- | ----- |
 | significance-tail | 0.79      | 6.41    | 8.1×  |
+| contrastive-coda  | 0.30      | 2.53    | 8.3×  |
 | contrastive-def   | 1.06      | 6.62    | 6.2×  |
 | negation-frame    | 2.04      | 10.50   | 5.2×  |
 | appositive-tail   | 0.59      | 3.15    | 5.3×  |
 | colon-explainer   | 2.05      | 4.74    | 2.3×  |
 
+`contrastive-coda` is the `X, not Y` form of contrastive definition, and it was missed for four
+releases. The rule in `SKILL.md` always described both forms, and the regex only ever matched
+`rather than` and `instead of`. Measured on prose that had already been rewritten to satisfy that
+regex, the coda still ran at 8.3 times the human rate. That is the sharpest separation in the study.
+The construction was moving to the undetected form, in the same way that banning the em dash moved
+it onto colons.
+
+Only the `not` form is detected. The `, no ...` variant was tested and dropped, because both of its
+human-corpus hits were ordinary clauses (", no problem." and ", no result is displayed before the
+next interactive prompt.") and it added 4 LLM hits against 2 human false positives.
+
 ## How the thresholds were set
 
-Rates are noisy per file, so thresholds come from the distribution rather than the aggregate. For
+Rates are noisy per file, so thresholds come from the distribution and never from the aggregate. For
 each pattern, `fail` is the lowest value that flags **none** of the 15 human documents, and `warn`
 is the 90th percentile of those documents. Banned marks are the exception, described below.
 
 | Pattern           | Baseline | Warn (human p90) | Fail (zero human hits) | LLM files caught |
 | ----------------- | -------- | ---------------- | ---------------------- | ---------------- |
 | significance-tail | 0.79     | 1.7              | 2.3                    | 93%              |
+| contrastive-coda  | 0.30     | 0.85             | 1.6                    | 54%              |
 | contrastive-def   | 1.06     | 2.3              | 4.0                    | 81%              |
 | negation-frame    | 2.04     | 4.6              | 5.0                    | 86%              |
 | appositive-tail   | 0.59     | 1.1              | 1.8                    | 81%              |
 | colon-explainer   | 2.05     | 2.0              | 3.0                    | 77%              |
+
+The `contrastive-coda` row follows the same rule as the others. Its human maximum is 1.51 per 1000
+words (a Python tutorial page on exceptions) and its 90th percentile is 0.83, so `fail` sits at 1.6
+and `warn` at 0.85. At 1.6 it flags 0 of the 19 human documents and 7 of the 13 LLM ones. That 54%
+is the lowest catch rate of the six, and it is measured against already-rewritten prose, so treat it
+as a floor.
 
 At the file level, where a document fails if any single pattern fails, the measured patterns at
 their zero-false-positive settings flag **0% of the human documents and 100% of the LLM documents**.
@@ -78,7 +106,7 @@ accepted.
 
 ## Banned marks
 
-Three marks are house rules rather than measured thresholds. Any occurrence in prose fails.
+Three marks are house rules with no measured threshold behind them. Any occurrence in prose fails.
 
 | Mark               | Human /1k | LLM /1k, unbanned | Note                                        |
 | ------------------ | --------- | ----------------- | ------------------------------------------- |
@@ -89,11 +117,11 @@ Three marks are house rules rather than measured thresholds. Any occurrence in p
 The em dash number corrects an earlier reading. Measured only against the corpus that already banned
 em dashes, the mark looked innocent at 0.33 per 1000 words. Measured against LLM prose written
 without that ban, it runs at 1.93 against a human 0.24. The first measurement was recording
-compliance with the ban, not the underlying habit. Banning it is justified.
+compliance with the ban and never the underlying habit. Banning it is justified.
 
 Semicolons are the opposite case. The human corpus uses them more than twice as often as any LLM
 corpus does. The ban removes almost nothing, and moves the prose slightly toward the machine end of
-the range. It is in place as a house consistency rule, not as a tic detector.
+the range. It is in place as a house consistency rule and never as a tic detector.
 
 Colons are now banned outright, and that is a house decision taken against the evidence rather than
 from it. At zero tolerance every one of the 15 human documents fails, because a mid-sentence colon
@@ -105,6 +133,25 @@ A colon ending a line, introducing a list, a code block or the next paragraph, i
 exempt. The human corpus uses that form 4.56 per 1000 words against the LLM corpus's 1.99, and
 documentation cannot be written without it. `toProse` closes a block that ends in a colon so that
 joining paragraphs cannot manufacture a mid-sentence one that nobody wrote.
+
+## Headings
+
+Headings are stripped before counting, on the grounds that they are labels rather than prose. That
+left them unscored for four releases, and it turned out to be where negation framing collects.
+
+| Corpus | Headings | Negation-framed | Share    |
+| ------ | -------- | --------------- | -------- |
+| Human  | 437      | 2               | 0.5%     |
+| LLM    | 128      | 8               | **6.3%** |
+
+Half of the LLM hits are the `X, not Y` coda in a heading ("Match service errors by name, not
+instanceof"), so the two findings in this section are one habit surfacing in two places.
+
+The two human hits are Django headings documenting a genuine prohibition ("When QuerySets are not
+cached" and "Field name hiding is not permitted"), and a heading like that is doing its job. A hard
+failure would flag them, so `heading-frame` reports every occurrence and never fails a file. It is
+the one check that lists all of its hits, because there are only ever a handful and each one is a
+line to go and fix.
 
 ## Where the construction goes next
 
@@ -139,21 +186,25 @@ thresholds had never seen.
 | Architecture READMEs, LLM, different genre           | 78,000  | 23 of 23                    |
 | Skills in another repository, LLM, different project | 6,200   | 5 of 6                      |
 
-Every pattern held its direction and rough magnitude across all of them. The five rules are not an
+Every pattern held its direction and rough magnitude across all of them. The rules are not an
 artefact of one project's house style.
 
 ## Patterns tested and dropped
 
 Each of these is a common style-guide rule. None of them separated the corpora.
 
-| Candidate                                                                             | Human      | LLM        | Verdict                 |
-| ------------------------------------------------------------------------------------- | ---------- | ---------- | ----------------------- |
-| Mean sentence length                                                                  | 19.8 words | 20.9 words | 1.06×, no signal        |
-| Sentences over 32 words                                                               | 11.7%      | 10.1%      | LLM writes fewer        |
-| AI vocabulary (`delve`, `robust`, `seamless`, `powerful`, `crucial`, `leverage`, ...) | 0.80 /1k   | 0.08 /1k   | LLM scores 10× lower    |
-| Gerund-led sentences                                                                  | 2.36 /1k   | 2.71 /1k   | 1.15×, no signal        |
-| Rule of three, prose only (code spans excluded)                                       | 0.63 /1k   | 0.34 /1k   | LLM writes half as many |
-| Trailing participles (`, leaving X`, `, making Y`)                                    | 0.30 /1k   | 0.14 /1k   | LLM writes half as many |
+| Candidate                                                                             | Human      | LLM        | Verdict                  |
+| ------------------------------------------------------------------------------------- | ---------- | ---------- | ------------------------ |
+| Mean sentence length                                                                  | 19.8 words | 20.9 words | 1.06×, no signal         |
+| Sentences over 32 words                                                               | 11.7%      | 10.1%      | LLM writes fewer         |
+| AI vocabulary (`delve`, `robust`, `seamless`, `powerful`, `crucial`, `leverage`, ...) | 0.80 /1k   | 0.08 /1k   | LLM scores 10× lower     |
+| Gerund-led sentences                                                                  | 2.36 /1k   | 2.71 /1k   | 1.15×, no signal         |
+| Rule of three, prose only (code spans excluded)                                       | 0.63 /1k   | 0.34 /1k   | LLM writes half as many  |
+| Trailing participles (`, leaving X`, `, making Y`)                                    | 0.30 /1k   | 0.14 /1k   | LLM writes half as many  |
+| Verbless list fragment (noun phrases, no main verb)                                   | 2.52 /1k   | 2.53 /1k   | 1.00×, no signal         |
+| Enumeration, four or more comma-separated items                                       | 3.71 /1k   | 4.46 /1k   | 1.2×, under the bar      |
+| Enumeration, five or more                                                             | 1.22 /1k   | 1.66 /1k   | 1.4×, under the bar      |
+| `, no ...` coda (as against `, not ...`)                                              | 0.02 /1k   | 0.27 /1k   | 2 human hits, both wrong |
 
 The vocabulary result is the one worth dwelling on. Django and Effective Go use the words on every
 AI-detector word list ten times more often than the Claude-written corpus does, because those words
@@ -163,6 +214,15 @@ with a word list.
 Sentence length is the same story from the other side. "Break up long sentences" was in the style
 guide, the corpus obeyed it, and the result was the same clause count packed into shorter sentences
 joined by colons.
+
+The verbless list fragment is the most surprising of the drops, and it was tested because a reader
+of this repository flagged it as the thing that grated most. It measures at 1.00×. Django and the
+Rust Book build sentences out of bare noun phrases exactly as often as the LLM corpus does. The
+dependency-parser study had already found this from the other direction, with the `appos` relation
+at 0.79× in favour of the human corpus. What makes a pile of them grate is repetition inside one
+document, and every measure in this study is a rate per 1000 words, and that is blind to whether six
+hits are spread through a page or stacked in one paragraph. A measure of within-document shape
+repetition would be the honest way to catch it, and none of the shipped rules is one.
 
 ## The dependency-parser study
 
@@ -205,9 +265,9 @@ Two traps it exposed, both worth repeating:
 
 ## The Pangram study
 
-The five patterns were selected, calibrated and enforced using measurements that all came from the
-same hand. Pangram is a commercial AI-text detector, and it had no part in defining any rule, so it
-was used as an outside judge of whether the rewriting achieves anything.
+The patterns were selected, calibrated and enforced using measurements that all came from the same
+hand. Pangram is a commercial AI-text detector, and it had no part in defining any rule, so it was
+used as an outside judge of whether the rewriting achieves anything.
 
 **Instrument check.** Four human documents (Django, two Rust Book chapters, a Python tutorial page)
 scored `fraction_ai` of 0.00 and came back "Human Written". No false positives on this genre, so its
@@ -232,7 +292,7 @@ stayed where it was.
 
 The conclusion is that style and provenance are different signals. The patterns are real differences
 between human and LLM technical writing, and a classifier keys on something else. `SKILL.md` says
-so, under "What this does not do".
+so, under "Limits".
 
 One reassuring result. No window in any group was flagged `is_humanized`. The rewriting is not
 producing evasion artefacts, largely because it moves the score so little.
@@ -262,10 +322,10 @@ A second measure supports the reading. Taking the ten most frequent content word
 human corpus gives them 23.9% of all content tokens against 19.4%, 18.3% and 14.9% for the three LLM
 corpora. Human technical writing concentrates on a small set of terms and repeats them. The Rust
 ownership chapter leans on data, string, heap, memory and stack. That is terminology discipline, and
-it is why the rule is worded as one name for one thing rather than as a target number.
+it is why the rule is worded as one name for one thing and never as a target number.
 
-It ships as advisory. It describes a document rather than a point in one, and padding with repeated
-words would move it the right way while making the prose worse.
+It ships as advisory. It describes a whole document and points at no line to fix, and padding with
+repeated words would move it the right way while making the prose worse.
 
 ## Re-running the study
 
