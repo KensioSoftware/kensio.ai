@@ -1,6 +1,6 @@
 {
   "name": "@kensio/github-issue-drafting",
-  "version": "1.7.1",
+  "version": "1.9.0",
   "description": "A way of drafting GitHub issues that checks every claim against the repository first.",
   "keywords": [
     "claude",
