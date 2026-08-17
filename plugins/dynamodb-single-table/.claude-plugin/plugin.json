@@ -1,0 +1,14 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "dynamodb-single-table",
+  "version": "1.10.0",
+  "description": "Data modelling for Amazon DynamoDB, starting from one table.",
+  "author": {
+    "name": "Kensio Software",
+    "email": "hugh@kensiosoftware.co.uk"
+  },
+  "homepage": "https://kensio.ai",
+  "repository": "https://github.com/KensioSoftware/kensio.ai",
+  "license": "Apache-2.0",
+  "keywords": ["aws", "dynamodb", "nosql", "data-modelling", "single-table"]
+}

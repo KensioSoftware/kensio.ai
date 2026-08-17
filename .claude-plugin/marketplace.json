@@ -53,6 +53,17 @@
       "tags": ["writing", "documentation", "prose", "style", "markdown"]
     },
     {
+      "name": "dynamodb-single-table",
+      "description": "Data modelling for Amazon DynamoDB, starting from one table.",
+      "source": "./plugins/dynamodb-single-table",
+      "author": {
+        "name": "Kensio Software",
+        "email": "hugh@kensiosoftware.co.uk"
+      },
+      "category": "development",
+      "tags": ["aws", "dynamodb", "nosql", "data-modelling", "single-table"]
+    },
+    {
       "name": "github-issue-drafting",
       "description": "A way of drafting GitHub issues that checks every claim against the repository first.",
       "source": "./plugins/github-issue-drafting",

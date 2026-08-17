@@ -18,6 +18,8 @@ importers:
         specifier: ^25.0.9
         version: 25.0.9
 
+  plugins/dynamodb-single-table: {}
+
   plugins/github-issue-drafting: {}
 
   plugins/isolated-testing-style: {}
