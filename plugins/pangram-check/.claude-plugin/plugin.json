@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "pangram-check",
-  "version": "1.13.0",
+  "version": "1.13.1",
   "description": "Check finished writing against the Pangram AI-text detector.",
   "author": {
     "name": "Kensio Software",
