@@ -1,12 +1,23 @@
 ---
 name: technical-prose-style
-description: Write documentation, READMEs, code comments, commit messages, release notes and PR text as plain technical prose, by removing the five sentence shapes that make machine-written text recognisable. Significance tails, contrastive definition, negation framing, appositive tails and colon explainers. Ships a script that scores prose against Django, Go, Rust and Python documentation. Use when writing or editing docs, a README, a changelog, a blog post or any prose for human readers, when asked to improve, tighten or rewrite writing, when prose "sounds like AI" or "sounds like Claude", and when reviewing documentation in a pull request.
+description: Write documentation, READMEs, code comments, commit messages, release notes and PR text as plain technical prose, by removing the constructions that make unedited LLM prose tiring to read. Significance tails, contrastive definition, negation framing, appositive tails, colon explainers, and a vocabulary that keeps renaming the same thing. Ships a script that scores prose against Django, Go, Rust and Python documentation. Use when writing or editing docs, a README, a changelog, a blog post or any prose for human readers, when asked to improve, tighten or rewrite writing, when prose "sounds like AI" or "sounds like Claude", and when reviewing documentation in a pull request.
 ---
 
 # Technical prose style
 
 For anything a human reads: `docs/`, README files, code comments, commit messages, release notes,
 issue and pull request text.
+
+## What this is for
+
+Unedited LLM prose is tiring to read. It is usually accurate, and the reader usually knows it was
+machine-drafted and minds that far less. What wears them down is the shape of it. The same
+construction over and over, every fact trailed by a clause explaining why the fact matters, a fresh
+synonym where the previous term would have done.
+
+The goal here is prose that costs the reader less. Concealment is a different aim, and out of scope.
+An independent detector still identifies text that follows every rule below as machine-written,
+which was tested rather than assumed. See "What this does not do" at the end.
 
 The five rules below were chosen by measurement, not by taste. 192,000 words of LLM-written
 technical documentation were compared against 66,000 words of Django, Go, Rust and Python
@@ -168,10 +179,27 @@ colons, where nothing was watching for it. A remark with nowhere to hang becomes
 The largest single gap in the whole study. The human corpus uses parenthetical asides at 6.19 per
 1000 words, the LLM corpus at 0.15. Forty times.
 
-So brackets are not a tic to avoid. They are the missing habit, and they are where a subordinate
-remark should go once the dash and the colon are gone. A qualification, an aside, a unit, a caveat
-worth one clause and not one sentence goes in brackets, the way the Rust Book and the Django docs do
-on nearly every page.
+So brackets are the missing habit here, not a tic to avoid. They are and they are where a
+subordinate remark should go once the dash and the colon are gone. A qualification, an aside, a
+unit, a caveat worth one clause and not one sentence goes in brackets, the way the Rust Book and the
+Django docs do on nearly every page.
+
+## Keep one name for one thing
+
+Human technical writing names a thing and goes on naming it that. LLM prose reaches for a synonym.
+
+Measured as distinct words per 100, averaged across a document, the human corpus sits at 0.628 and
+never exceeds 0.664. The LLM corpus sits at 0.685 and never falls below 0.658. That is the cleanest
+single separation in the whole study, and it is the one that maps most directly onto reader fatigue.
+A new name for an old thing stops the reader to re-resolve what it refers to.
+
+So if the thing is a queue, call it the queue every time. Not the queue, then the message store,
+then the buffer. The same holds for the identifiers in the code being documented.
+
+The checker reports this as advisory and never fails a file on it, for two reasons. It describes a
+whole document rather than a defect at a point, so there is no line to go and fix. And it is
+trivially gamed by padding with repeated words, which would move the number the right way while
+making the prose worse.
 
 ## What not to change
 
@@ -234,6 +262,20 @@ for quoted material only, never to silence a passage the checker is right about.
 Prose that passes the script can still be bad, and the script has no opinion about whether the
 content is correct or the page is in a sensible order. It catches the reflexes. Judgement is still
 required for everything else.
+
+## What this does not do
+
+It fails to make text pass as human-written, and it should not be sold that way.
+
+Six documents were rewritten to satisfy every rule here and then submitted to Pangram, a commercial
+detector. All six were still identified as AI. The mean score moved from 0.87 to 0.79, one document
+scored worse after the rewrite, and two were pinned at the maximum in both states. The same detector
+scored four human control documents at zero, so the instrument was working.
+
+Style and provenance are different signals. The patterns here are real differences between human and
+LLM technical writing, and closing them makes prose plainer. A classifier keys on something else.
+Anyone who wants concealment is holding the wrong tool, and it is worth saying so plainly to a user
+who asks.
 
 ## Related skills
 

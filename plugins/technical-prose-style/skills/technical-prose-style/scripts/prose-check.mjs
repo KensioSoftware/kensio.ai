@@ -60,6 +60,32 @@ const PATTERNS = [
     fail: 3.0,
     hint: "A colon may introduce a list or a definition. It should not join a claim to a restatement.",
   },
+  {
+    name: "lexical-spread",
+    // Distinct words per 100, averaged over the document. Human technical writing
+    // names a thing and then keeps naming it that. LLM prose reaches for a synonym,
+    // which spreads the vocabulary and makes the reader re-resolve the referent.
+    // 15 human documents average 0.628 and none exceeds 0.664. 55 LLM documents
+    // average 0.685 and none falls below 0.658. See reference/measurements.md.
+    measure: (prose) => {
+      const words = prose.toLowerCase().match(/[a-z']+/g) ?? [];
+      if (words.length < 100) return null;
+      const chunks = [];
+      for (let i = 0; i + 100 <= words.length; i += 100) {
+        chunks.push(new Set(words.slice(i, i + 100)).size / 100);
+      }
+      return chunks.reduce((a, b) => a + b, 0) / chunks.length;
+    },
+    unit: "distinct/100",
+    baseline: 0.628,
+    warn: 0.655,
+    // Advisory, never a failure. Two reasons. It describes a whole document rather
+    // than a defect at a point, so there is no line to go and fix. And it is trivially
+    // gameable by padding with repeated words, which would make the prose worse while
+    // moving the number the right way.
+    advisory: true,
+    hint: "Use the same term for the same thing. A synonym makes the reader re-resolve the referent.",
+  },
   // Banned marks. Any occurrence in prose fails, whatever the rate.
   {
     name: "em-dash",
@@ -81,8 +107,15 @@ let active;
 const MIN_WORDS = 200; // below this, rates per 1000 words are too noisy to act on
 const MIN_COUNT = 3; // a rate computed from one or two occurrences is noise too
 
-/** Reduce markdown to the prose a human actually reads. */
-function toProse(markdown) {
+/**
+ * Reduce markdown to the prose a human actually reads.
+ *
+ * Regex patterns need inline code masked, so a colon or a comma inside a code span
+ * cannot be mistaken for punctuation in a sentence. The lexical measure needs the
+ * opposite: an identifier like `SimAws` is exactly the kind of term that should be
+ * repeated, and collapsing every span to one token would hide that.
+ */
+function toProse(markdown, { keepCode = false } = {}) {
   let text = markdown
     .replace(/^---\n[\s\S]*?\n---\n/, "") // frontmatter
     // Regions a document has deliberately excluded, for quoting prose as an example of
@@ -95,7 +128,7 @@ function toProse(markdown) {
     .replace(/^\[[^\]]+\]:.*$/gm, "") // reference definitions
     // List typography, not a prose splice: `- **Term** — description`.
     .replace(/^(\s*(?:[-*+]|\d+\.)\s+(?:\*\*[^*\n]+\*\*|\[[^\]\n]+\]|`[^`\n]+`))\s+—/gm, "$1 ")
-    .replace(/`[^`\n]*`/g, "CODE") // inline code
+    .replace(/`([^`\n]*)`/g, keepCode ? "$1" : "CODE") // inline code
     .replace(/<[^>\n]+>/g, "")
     .replace(/https?:\/\/\S+/g, "");
 
@@ -143,11 +176,22 @@ function sentences(prose) {
 }
 
 function scoreFile(path) {
-  const prose = toProse(readFileSync(path, "utf8"));
+  const markdown = readFileSync(path, "utf8");
+  const prose = toProse(markdown);
+  const measurable = toProse(markdown, { keepCode: true });
   const words = prose ? prose.split(" ").length : 0;
   const sents = sentences(prose);
 
   const results = active.map((pattern) => {
+    if (pattern.measure) {
+      const value = pattern.measure(measurable);
+      let status = "ok";
+      if (words < MIN_WORDS || value === null) status = "short";
+      else if (!pattern.advisory && value >= pattern.fail) status = "FAIL";
+      else if (value >= pattern.warn) status = "warn";
+      return { pattern, count: null, rate: value, status, worst: [] };
+    }
+
     const count = [...prose.matchAll(pattern.re)].length;
     const rate = words ? (count / words) * 1000 : 0;
     let status = "ok";
@@ -208,7 +252,11 @@ if (json) {
         patterns: Object.fromEntries(
           r.results.map((x) => [
             x.pattern.name,
-            { count: x.count, rate: Number(x.rate.toFixed(2)), status: x.status },
+            {
+              count: x.count,
+              rate: x.rate === null ? null : Number(x.rate.toFixed(3)),
+              status: x.status,
+            },
           ]),
         ),
       })),
@@ -232,8 +280,14 @@ if (json) {
       const colour = status === "FAIL" ? "\x1b[31m" : "\x1b[33m";
       console.log(
         `  ${colour}${status.padEnd(4)}\x1b[0m ${pattern.name.padEnd(18)} ` +
-          `${rate.toFixed(2).padStart(5)} /1k  (${count}, baseline ${pattern.baseline}, ` +
-          (pattern.ban ? "banned)" : `warn ${pattern.warn}, fail ${pattern.fail})`),
+          (pattern.measure
+            ? `${rate.toFixed(3).padStart(5)} ${pattern.unit}  (baseline ${pattern.baseline}, `
+            : `${rate.toFixed(2).padStart(5)} /1k  (${count}, baseline ${pattern.baseline}, `) +
+          (pattern.ban
+            ? "banned)"
+            : pattern.advisory
+              ? `warn ${pattern.warn}, advisory)`
+              : `warn ${pattern.warn}, fail ${pattern.fail})`),
       );
       console.log(`       ${pattern.hint}`);
       for (const sentence of worst.slice(0, maxExamples)) {

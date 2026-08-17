@@ -196,6 +196,70 @@ Two traps it exposed, both worth repeating:
 - **Markup masquerading as prose.** Rule of three separates at 2.6× until code spans are excluded,
   at which point it inverts to 0.54×. The whole signal was lists of API names.
 
+## The Pangram study
+
+The five patterns were selected, calibrated and enforced using measurements that all came from the
+same hand. Pangram is a commercial AI-text detector, and it had no part in defining any rule, so it
+was used as an outside judge of whether the rewriting achieves anything.
+
+**Instrument check.** Four human documents (Django, two Rust Book chapters, a Python tutorial page)
+scored `fraction_ai` of 0.00 and came back "Human Written". No false positives on this genre, so its
+verdicts here can be relied on.
+
+**Treatment.** Six documents in this repository were scored before and after being rewritten to
+satisfy every rule above.
+
+| Document                      | Before   | After    |
+| ----------------------------- | -------- | -------- |
+| isolated-testing-style SKILL  | 0.87     | 0.48     |
+| yulin-aws-simulation SKILL    | 1.00     | 0.82     |
+| root README                   | 0.65     | 0.46     |
+| isolated-testing-style README | 1.00     | 1.00     |
+| part-factory SKILL            | 1.00     | 1.00     |
+| yulin-aws-simulation README   | 0.68     | 1.00     |
+| **Mean**                      | **0.87** | **0.79** |
+
+All six were still identified as AI after the rewrite. One scored worse. Edit volume failed to
+predict the change: the document with the most edits improved by 0.18, and the one with the fewest
+stayed where it was.
+
+The conclusion is that style and provenance are different signals. The patterns are real differences
+between human and LLM technical writing, and a classifier keys on something else. `SKILL.md` says
+so, under "What this does not do".
+
+One reassuring result: no window in any group was flagged `is_humanized`. The rewriting is not
+producing evasion artefacts, largely because it moves the score so little.
+
+## What the Pangram study did find
+
+Pangram scores windows of roughly 300 words, which gave 109 windows across the four groups. Features
+were computed per window and correlated with the window score.
+
+| Feature                       | Human | LLM   | r with score |
+| ----------------------------- | ----- | ----- | ------------ |
+| Distinct words per 100        | 0.627 | 0.699 | **0.51**     |
+| Parenthetical asides per 1000 | 5.90  | 0.99  | -0.26        |
+| The five patterns per 1000    | 6.24  | 20.46 | 0.16         |
+| Sentence length variance      | 10.30 | 9.42  | -0.23        |
+| Mean sentence length          | 19.44 | 18.36 | -0.18        |
+
+Lexical spread is the strongest correlate by some distance, and it holds up when length is
+controlled, which matters because raw type-token ratio falls as text gets longer (r of -0.73 against
+window length here). Measuring fixed 100-word chunks removes that.
+
+Scored over whole documents with the shipped extraction, 15 human documents average 0.628 and none
+exceeds 0.664, while 55 LLM documents average 0.685 and none falls below 0.658. The distributions
+barely touch.
+
+A second measure supports the reading. Taking the ten most frequent content words in a document, the
+human corpus gives them 23.9% of all content tokens against 19.4%, 18.3% and 14.9% for the three LLM
+corpora. Human technical writing concentrates on a small set of terms and repeats them. The Rust
+ownership chapter leans on data, string, heap, memory and stack. That is terminology discipline, and
+it is why the rule is worded as one name for one thing rather than as a target number.
+
+It ships as advisory. It describes a document rather than a point in one, and padding with repeated
+words would move it the right way while making the prose worse.
+
 ## Re-running the study
 
 The point of a measured style guide is that it can be re-measured. To recalibrate against a
