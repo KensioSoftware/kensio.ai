@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "isolated-testing-style",
-      "description": "An opinionated testing style: start from given/when/then, fake collaborators by simulation, get isolation from randomised data instead of setup and teardown, and assert on behaviour.",
+      "description": "An opinionated testing style built on simulated collaborators and randomised data.",
       "source": "./plugins/isolated-testing-style",
       "author": {
         "name": "Kensio Software",
@@ -21,7 +21,7 @@
     },
     {
       "name": "yulin-aws-simulation",
-      "description": "How to test AWS code well with the @kensio/yulin in-process simulator: using it directly instead of building a harness around it, driving tests, local dev and production from one synthesized CDK template, intercepting SDK clients, controlling simulated time, and handling what the simulator refuses.",
+      "description": "How to test AWS code well with the @kensio/yulin in-process simulator.",
       "source": "./plugins/yulin-aws-simulation",
       "author": {
         "name": "Kensio Software",
@@ -32,7 +32,7 @@
     },
     {
       "name": "part-factory-test-data",
-      "description": "How to build test data with @kensio/part-factory: keeping in the factory everything a test does not care about, passing dependencies at call time so factories stay independent and shareable, and choosing between its static, dynamic, variant and mapped factories.",
+      "description": "How to build typed test data with @kensio/part-factory factories.",
       "source": "./plugins/part-factory-test-data",
       "author": {
         "name": "Kensio Software",
@@ -43,7 +43,7 @@
     },
     {
       "name": "technical-prose-style",
-      "description": "Plain technical prose for docs, READMEs, comments and commit messages: five measured sentence shapes to remove, the style rules that turn out not to matter, and a script that scores prose against Django, Go, Rust and Python documentation.",
+      "description": "A measured prose style for documentation, with a checker calibrated on human technical writing.",
       "source": "./plugins/technical-prose-style",
       "author": {
         "name": "Kensio Software",
@@ -54,7 +54,7 @@
     },
     {
       "name": "skill-template",
-      "description": "A copy-and-edit starting point for writing a new Claude Code skill, covering SKILL.md frontmatter, description wording, and progressive disclosure.",
+      "description": "A copy-and-edit starting point for a new Claude Code skill.",
       "source": "./plugins/skill-template",
       "author": {
         "name": "Kensio Software",

@@ -9,8 +9,8 @@ description: Use the @kensio/yulin in-process AWS simulator well when testing AW
 network and no AWS account. Its own docs are the authority on the API. This skill covers how to use
 it well, and that lives mostly outside the API.
 
-Read the package docs for anything API-shaped:
-[the README](https://github.com/KensioSoftware/yulin#readme), `docs/sdk/` for interception, and
+Read the package docs for anything API-shaped. Start with
+[the README](https://github.com/KensioSoftware/yulin#readme), then `docs/sdk/` for interception and
 `docs/services/<name>/` for each simulated service.
 
 This skill serves the `isolated-testing-style` skill, the general argument for simulation over
@@ -25,7 +25,7 @@ want that trade can go the other way knowingly.
 The most common way to go wrong with Yulin is to build something on top of it. The failure looks
 like a `TestAwsEnvironment` class, a `setupSimulatedAws()` helper returning six things, a factory
 per service, or a `beforeEach` that reassembles the world (a private framework wrapped around a tool
-that is already the framework.
+that is already the framework).
 
 It is worth resisting, because Yulin is built to be used directly:
 

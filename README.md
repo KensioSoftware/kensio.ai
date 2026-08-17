@@ -226,7 +226,7 @@ failing the release, so one new plugin cannot strand the ones that published cle
 
 A trusted publisher binds to an owner, a repository and a workflow filename, and not to a ref. On
 its own that would let any run of `release.yml` publish, including a modified copy pushed to a
-branch and started by hand through `workflow_dispatch`. The `release` environment closes that: its
+branch and started by hand through `workflow_dispatch`. The `release` environment closes that. Its
 deployment rule allows `main` only. A run from any other ref cannot enter it, and fails before
 reaching `npm publish`. The environment name is itself an OIDC claim, which is why it has to match
 on both sides.
