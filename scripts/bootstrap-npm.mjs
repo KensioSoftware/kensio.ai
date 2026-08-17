@@ -52,18 +52,40 @@ if ((status.stdout ?? "").trim() !== "") {
   process.exit(1);
 }
 
-// The version has to be one that exists as a release, because everything
-// downstream (the marketplace, the zips, the site) is keyed on the tag.
-const tagged = run("git", ["tag", "--points-at", "HEAD"]);
-const tags = (tagged.stdout ?? "")
-  .split("\n")
-  .map((tag) => tag.trim())
-  .filter(Boolean);
-if (!tags.includes(`v${rootVersion}`)) {
-  console.error(`✖ HEAD is not tagged v${rootVersion}, so this is not a released commit.`);
-  console.error("  Check out the release tag, run scripts/set-version.mjs for it, and retry.");
-  console.error(`  Tags here: ${tags.length > 0 ? tags.join(", ") : "none"}`);
+/*
+ * The version has to be one that was actually released, because everything
+ * downstream (the marketplace, the zips, the site) is keyed on the tag.
+ *
+ * The tag is not where this gets run from, though. semantic-release tags the
+ * commit before it writes the version out, so the tagged tree still carries the
+ * previous number, and the commit to publish is the version bump that lands on
+ * main afterwards. Requiring the tag itself asked for the one tree whose
+ * manifests are wrong.
+ *
+ * So the rule is that the tag exists and this commit descends from it. Being
+ * ahead of the tag is reported rather than refused: it means publishing a
+ * little more than the release named, and the next release republishes
+ * everything in lockstep anyway.
+ */
+const tag = `v${rootVersion}`;
+
+if (run("git", ["rev-parse", "--verify", "--quiet", `${tag}^{commit}`]).status !== 0) {
+  console.error(`✖ There is no ${tag} tag, so ${rootVersion} has never been released.`);
+  console.error("  Publishing it would put a version on npm that names no commit.");
   process.exit(1);
+}
+
+if (run("git", ["merge-base", "--is-ancestor", tag, "HEAD"]).status !== 0) {
+  console.error(`✖ This commit does not contain ${tag}, so it is not the release it claims to be.`);
+  console.error("  Check out main once the version bump has landed, then retry.");
+  process.exit(1);
+}
+
+const ahead = (run("git", ["log", "--oneline", `${tag}..HEAD`]).stdout ?? "").trim();
+if (ahead !== "") {
+  console.log(`Note: ${ahead.split("\n").length} commit(s) sit on top of ${tag}.`);
+  for (const line of ahead.split("\n")) console.log(`    ${line}`);
+  console.log("  The version bump is one of them. Anything else goes to npm as well.");
 }
 
 const whoami = run("npm", ["whoami"]);

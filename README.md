@@ -236,8 +236,8 @@ anything becomes permanent on npm. Until it is set, releases are tagged on GitHu
 gh variable set PUBLISH_NPM --body true
 ```
 
-`publish-npm.mjs` also takes `--dry-run`, which packs each plugin and skips the upload, so the
-script can be exercised locally without touching the registry:
+`publish-npm.mjs` also takes `--dry-run`. It packs each plugin and skips the upload, which is how to
+exercise the script locally without touching the registry:
 
 ```bash
 PUBLISH_NPM=true node scripts/publish-npm.mjs 1.0.0 --dry-run
@@ -253,9 +253,10 @@ Trusted publishing is configured on a package's settings page on npmjs.com. The 
 before it can be configured. npm has no equivalent of PyPI's pending publishers, so the first
 version of every package goes up from a machine with an `npm login` on it.
 
+Run it from `main`, once the release has tagged and its version bump has merged:
+
 ```bash
-git checkout v<version>
-node scripts/set-version.mjs <version>
+git switch main && git pull
 pnpm bootstrap:npm                        # a report
 node scripts/bootstrap-npm.mjs --publish  # the real thing
 ```
@@ -264,14 +265,14 @@ node scripts/bootstrap-npm.mjs --publish  # the real thing
 bundles the skills into the installer first, and publishes the ones that are missing. Without
 `--publish` it only reports. Run it that way first.
 
-It refuses a dirty working tree, a commit that carries no release tag, a manifest at a different
-version from the root, and an npm that cannot say whether a package exists. Each of those is a way
-to put something wrong on the registry permanently.
+It refuses a dirty working tree, a version with no release tag behind it, a commit that does not
+contain that tag, a manifest at a different version from the root, and an npm that cannot say
+whether a package exists. Each of those is a way to put something wrong on the registry permanently.
 
-`set-version` is the step that is easy to miss, and it is why the tag check is there.
-semantic-release tags the commit before it writes the version into the manifests. A clean checkout
-of the tag still carries the previous number, and publishing straight from it would put the wrong
-version on npm.
+**Run it from the bump commit rather than from the tag.** semantic-release tags the commit before it
+writes the version into the manifests. The tagged tree still carries the previous number, and the
+tree to publish is the version bump that lands on main afterwards. Commits sitting on top of the tag
+are reported rather than refused, since the next release republishes everything in lockstep.
 
 That first version carries no provenance attestation, because provenance is minted from the
 workflow's OIDC token and there is no workflow involved. Every version after it does.

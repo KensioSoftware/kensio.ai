@@ -100,13 +100,12 @@ if (needBootstrap.length > 0) {
   console.log("  Run these on a machine with an npm login, then add a trusted publisher for each");
   console.log("  package under Settings, Trusted Publisher on npmjs.com. See the README.");
   console.log("");
-  console.log(`    git checkout v${version}`);
-  console.log(`    node scripts/set-version.mjs ${version}`);
+  console.log("    git switch main && git pull");
   console.log("    node scripts/bootstrap-npm.mjs --publish");
   console.log("");
-  console.log("  set-version is the step that is easy to miss. semantic-release tags the commit");
-  console.log("  before it writes the version out, so the manifests at the tag still carry the");
-  console.log("  previous number. bootstrap-npm refuses to run when they disagree.");
+  console.log("  Run it once this release's version bump has merged, and from main rather than");
+  console.log("  from the tag. The tagged tree still carries the previous version, because the");
+  console.log("  tag is written before the manifests are.");
 }
 
 // Reported after the bootstrap notice, so a real failure never hides the one
