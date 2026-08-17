@@ -19,13 +19,13 @@ The goal here is prose that costs the reader less. Concealment is a different ai
 An independent detector still identifies text that follows every rule below as machine-written,
 which was tested rather than assumed. See "What this does not do" at the end.
 
-The five rules below were chosen by measurement, not by taste. 192,000 words of LLM-written
-technical documentation were compared against 66,000 words of Django, Go, Rust and Python
-documentation, and only the patterns where the two differed by a factor of two or more were kept.
-The five that survived run between 2.3 and 8.1 times the human rate. Everything else tested came in
-under 1.2 times. Thresholds are set so that no human document in the corpus fails and every LLM
-document does. [reference/measurements.md](reference/measurements.md) has the numbers, the method,
-the patterns that were tested and dropped, and a dependency-parser study that falsified four more.
+The rules below were chosen by measurement, not by taste. 192,000 words of LLM-written technical
+documentation were compared against 66,000 words of Django, Go, Rust and Python documentation, and
+only the patterns where the two differed by a factor of two or more were kept. The five that
+survived run between 2.3 and 8.1 times the human rate. Everything else tested came in under 1.2
+times. Thresholds are set so that no human document in the corpus fails and every LLM document does.
+[reference/measurements.md](reference/measurements.md) has the numbers, the method, the patterns
+that were tested and dropped, and a dependency-parser study that falsified four more.
 
 Read [What not to change](#what-not-to-change) before rewriting anything. Several of the usual style
 rules make the prose worse, and the measurements show why.
@@ -35,8 +35,8 @@ rules make the prose worse, and the measurements show why.
 Write the way Go's package documentation and the Django docs are written.
 
 - One claim per sentence.
-- The subject is something the reader can point at: a function, a queue, a file, a test. Not "what a
-  deterministic assertion wants".
+- The subject is something the reader can point at, such as a function, a queue, a file or a test.
+  Not "what a deterministic assertion wants".
 - Present tense, active voice.
 - Say what the thing does, then stop. Trust the reader to work out what it means for them.
 
@@ -48,7 +48,7 @@ attributes always matches.
 
 Three sentences, three facts, no commentary on any of them.
 
-## The five patterns
+## The four sentence patterns
 
 Each one is a sentence shape, not a word. Vocabulary bans do not touch them, which is why a banned
 word list can be followed perfectly and the prose still reads as machine-written.
@@ -136,38 +136,21 @@ its own sentence or delete it.
 > **After.** The schedule has to exist. Updating one that is absent raises
 > `ResourceNotFoundException`. EventBridge's `PutRule` creates it.
 
-### 5. Colon explainer
-
-A colon joining a claim to its own restatement or justification.
-
-Detect: `[a-z,] ?: [a-z]`
-
-A colon introducing a list, a definition, or a term is fine. A colon introducing a second version of
-the sentence just before it is the em dash habit wearing different punctuation. Banning the em dash
-moved this construction onto colons without removing any of it.
-
-<!-- prose-check:off -->
-
-> **Before.** The properties with behaviour that is not simulated are a different case: the queue is
-> created without them and each one is recorded in `propertiesNotApplied`, so a stack full of queues
-> still deploys.
-
-<!-- prose-check:on -->
-
-> **After.** Properties whose behaviour is not simulated are handled differently. The queue is
-> created without them, and each one is recorded in `propertiesNotApplied`. The stack still deploys.
-
 ## Banned marks
 
-Three marks are house rules. The checker fails a file for any occurrence of the first two.
+Three marks are house rules. The checker fails a file for any occurrence of any of them.
 
 - **Em dashes.** None in prose. In LLM prose written without a ban they run at 1.93 per 1000 words
   against a human 0.24, so this one is earned. Replace with a full stop, a comma, or brackets.
 - **Semicolons.** None in prose. This one is consistency rather than evidence. The human corpus uses
   semicolons more than twice as often as any LLM corpus does. Split the sentence instead.
-- **Mid-sentence colons.** Rate-limited, not banned, because a mid-sentence colon is ordinary
-  English and zero tolerance fails every human document in the corpus. A colon that ends a line to
-  introduce a list or a code block is exempt.
+- **Mid-sentence colons.** None in prose. This is a house decision taken against the evidence, and
+  worth being clear about. A mid-sentence colon is ordinary English, and at zero tolerance every one
+  of the 15 human documents in the corpus fails. It is banned anyway, on the same reasoning as the
+  em dash. The construction reads as machine-written whoever wrote it, and the cost of doing without
+  it is low. A colon **ending a line** to introduce a list, a code block or the next paragraph is
+  exempt and always will be. Documentation cannot be written without it. Only the mid-sentence form
+  is banned, and the two are distinguished by whether the colon's object is in the same paragraph.
 
 The `- **Term** — description` form in a list is typography, not prose, and is exempt.
 

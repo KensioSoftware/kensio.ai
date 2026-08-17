@@ -29,9 +29,9 @@ tests their isolation. `VariantFactory` for a named variation of a base factory,
 is worth a name in the test. `MappedFactory` when the output shape differs from the parts you want
 to override.
 
-**When a mapped factory earns its place.** The map should be a real transformation: parts to an
-encoded form body, or front matter parts to a file as written on disk. If the map is copying fields
-across into an object of the same shape, you wanted a `DynamicFactory`.
+**When a mapped factory earns its place.** The map should be a real transformation, such as parts to
+an encoded form body, or front matter parts to a file as written on disk. If the map is copying
+fields across into an object of the same shape, you wanted a `DynamicFactory`.
 
 **Do not wrap a factory in a function that applies overrides.** `make(overrides)` already is that
 function, and it does the job better, since its overrides are partial all the way down the nested

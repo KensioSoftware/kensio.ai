@@ -73,7 +73,8 @@ Book is wrong, so the thresholds moved to the rule above.
 Colon-explainer is the one place the zero-false-positive rule was overridden deliberately. At a
 threshold no human document trips (6.6) it caught only 27% of LLM documents. It is set to 3.0
 instead, as a house decision to suppress the construction. That costs 3 of the 15 human documents,
-all of them Python pages, which use "term: explanation" heavily. The cost is known and accepted.
+all of them Python pages, which lean on the "term, then explanation" form. The cost is known and
+accepted.
 
 ## Banned marks
 
@@ -83,7 +84,7 @@ Three marks are house rules rather than measured thresholds. Any occurrence in p
 | ------------------ | --------- | ----------------- | ------------------------------------------- |
 | Em dash            | 0.24      | 1.93              | 8× the human rate where no ban was in force |
 | Semicolon          | 2.70      | 1.04              | The human corpus uses these 2.6× more       |
-| Mid-sentence colon | 1.49      | 4.00              | Rate-limited rather than banned, see above  |
+| Mid-sentence colon | 1.49      | 4.00              | Banned by house decision, see below         |
 
 The em dash number corrects an earlier reading. Measured only against the corpus that already banned
 em dashes, the mark looked innocent at 0.33 per 1000 words. Measured against LLM prose written
@@ -94,10 +95,16 @@ Semicolons are the opposite case. The human corpus uses them more than twice as 
 corpus does. The ban removes almost nothing, and moves the prose slightly toward the machine end of
 the range. It is in place as a house consistency rule, not as a tic detector.
 
-Colons could not be banned outright. At zero tolerance every one of the 15 human documents fails,
-because a mid-sentence colon is ordinary English. A colon ending a line to introduce a list or a
-code block is exempt entirely, and the human corpus uses that form 4.56 per 1000 words against the
-LLM corpus's 1.99.
+Colons are now banned outright, and that is a house decision taken against the evidence rather than
+from it. At zero tolerance every one of the 15 human documents fails, because a mid-sentence colon
+is ordinary English. The reasoning is the same as for the em dash. The construction reads as
+machine-written whoever wrote it, and prose costs little by doing without it. Anyone recalibrating
+this study should treat the colon threshold as a preference and the other four as measurements.
+
+A colon ending a line, introducing a list, a code block or the next paragraph, is exempt and stays
+exempt. The human corpus uses that form 4.56 per 1000 words against the LLM corpus's 1.99, and
+documentation cannot be written without it. `toProse` closes a block that ends in a colon so that
+joining paragraphs cannot manufacture a mid-sentence one that nobody wrote.
 
 ## Where the construction goes next
 
@@ -220,14 +227,14 @@ satisfy every rule above.
 | **Mean**                      | **0.87** | **0.79** |
 
 All six were still identified as AI after the rewrite. One scored worse. Edit volume failed to
-predict the change: the document with the most edits improved by 0.18, and the one with the fewest
+predict the change. The document with the most edits improved by 0.18, and the one with the fewest
 stayed where it was.
 
 The conclusion is that style and provenance are different signals. The patterns are real differences
 between human and LLM technical writing, and a classifier keys on something else. `SKILL.md` says
 so, under "What this does not do".
 
-One reassuring result: no window in any group was flagged `is_humanized`. The rewriting is not
+One reassuring result. No window in any group was flagged `is_humanized`. The rewriting is not
 producing evasion artefacts, largely because it moves the score so little.
 
 ## What the Pangram study did find
@@ -285,5 +292,5 @@ enforced as style rules.
 Feeding bad passages through a third-party rewriter and mining the diffs is a reasonable way to
 generate candidate patterns. It is a poor way to decide which ones to keep, because the tool's own
 preferences arrive along with the improvements, and there is no way to tell one from the other. The
-measurement above is the filter: generate candidates however you like, then keep the ones that
+measurement above is the filter. Generate candidates however you like, then keep the ones that
 separate real human prose from your own output.

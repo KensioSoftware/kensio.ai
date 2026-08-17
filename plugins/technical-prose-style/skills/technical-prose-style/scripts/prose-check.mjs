@@ -52,14 +52,7 @@ const PATTERNS = [
     fail: 1.8,
     hint: "Promote the clause to its own sentence, or delete it.",
   },
-  {
-    name: "colon-explainer",
-    re: /[a-z,] ?: [a-z]/g,
-    baseline: 2.05,
-    warn: 2.0,
-    fail: 3.0,
-    hint: "A colon may introduce a list or a definition. It should not join a claim to a restatement.",
-  },
+
   {
     name: "lexical-spread",
     // Distinct words per 100, averaged over the document. Human technical writing
@@ -99,7 +92,17 @@ const PATTERNS = [
     re: /;/g,
     baseline: 2.7,
     ban: true,
-    hint: "Split the sentence. House rule: none in prose.",
+    hint: "Split the sentence. House rule, none in prose.",
+  },
+  {
+    // A colon ending a line to introduce a list or a code block does not match,
+    // because the next block starts with a capital or a fence. Only the
+    // mid-sentence form is banned.
+    name: "colon-splice",
+    re: /[a-z,] ?: [a-z]/g,
+    baseline: 2.05,
+    ban: true,
+    hint: "Start a new sentence. House rule, no mid-sentence colons in prose.",
   },
 ];
 
@@ -161,11 +164,18 @@ function toProse(markdown, { keepCode = false } = {}) {
   }
   flush();
 
-  return blocks
-    .map((block) => (/[.!?:]$/.test(block) ? block : `${block}.`))
-    .join(" ")
-    .replace(/\s+/g, " ")
-    .trim();
+  return (
+    blocks
+      // A block ending in a colon introduces the next block, a list or a code
+      // fence. Its object is not in this block, so the colon is closed off here.
+      // Without this, joining blocks manufactures a mid-sentence colon that the
+      // author never wrote.
+      .map((block) => block.replace(/:$/, "."))
+      .map((block) => (/[.!?]$/.test(block) ? block : `${block}.`))
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim()
+  );
 }
 
 function sentences(prose) {
