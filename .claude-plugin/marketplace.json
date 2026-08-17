@@ -53,6 +53,17 @@
       "tags": ["writing", "documentation", "prose", "style", "markdown"]
     },
     {
+      "name": "github-issue-drafting",
+      "description": "A way of drafting GitHub issues that checks every claim against the repository first.",
+      "source": "./plugins/github-issue-drafting",
+      "author": {
+        "name": "Kensio Software",
+        "email": "hugh@kensiosoftware.co.uk"
+      },
+      "category": "productivity",
+      "tags": ["github", "issues", "gh", "drafting", "triage"]
+    },
+    {
       "name": "skill-template",
       "description": "A copy-and-edit starting point for a new Claude Code skill.",
       "source": "./plugins/skill-template",

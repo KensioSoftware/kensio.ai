@@ -10,7 +10,8 @@ from the Claude Code marketplace, from npm, or (later) as a downloadable archive
 
 The three testing skills are a set: `isolated-testing-style` is a way of writing tests, and
 `yulin-aws-simulation` and `part-factory-test-data` cover two Kensio packages that serve it.
-`skill-template` is the starting point for writing a new skill.
+`technical-prose-style` and `github-issue-drafting` both cover writing, one for documentation and
+one for issue text. `skill-template` is the starting point for writing a new skill.
 
 ## Install
 
@@ -62,6 +63,8 @@ Zips of each plugin will be published on kensio.ai for machines that have neithe
 | [`isolated-testing-style`](plugins/isolated-testing-style) | `@kensio/isolated-testing-style` | Given/when/then first, real collaborators through simulation, isolation from randomised data. |
 | [`yulin-aws-simulation`](plugins/yulin-aws-simulation)     | `@kensio/yulin-aws-simulation`   | Testing AWS code with the [Yulin](https://yulinsim.dev/) in-process simulator.                |
 | [`part-factory-test-data`](plugins/part-factory-test-data) | `@kensio/part-factory-test-data` | Building test data with [Part Factory](https://partfactory.dev/).                             |
+| [`technical-prose-style`](plugins/technical-prose-style)   | `@kensio/technical-prose-style`  | A measured prose style for documentation, with a checker calibrated on human writing.         |
+| [`github-issue-drafting`](plugins/github-issue-drafting)   | `@kensio/github-issue-drafting`  | Drafting GitHub issues grounded in the repository they are filed against.                     |
 | [`skill-template`](plugins/skill-template)                 | `@kensio/skill-template`         | Copy-and-edit starting point for writing a new skill.                                         |
 
 The first three are meant to be read together. `isolated-testing-style` is the philosophy, and the
@@ -159,7 +162,7 @@ created with `GITHUB_TOKEN` does not trigger workflow runs), and it is merged wi
 
 ### One version, everywhere
 
-All eleven manifests (the root `package.json`, and each plugin's `package.json` and `plugin.json`)
+All thirteen manifests (the root `package.json`, and each plugin's `package.json` and `plugin.json`)
 carry the same number, written by [`set-version.mjs`](scripts/set-version.mjs). A version therefore
 means the same commit whether it came from the marketplace or from npm.
 
