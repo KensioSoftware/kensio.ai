@@ -1,0 +1,33 @@
+{
+  "name": "@kensio/dynamodb-single-table",
+  "version": "1.10.0",
+  "description": "Data modelling for Amazon DynamoDB, starting from one table.",
+  "keywords": [
+    "aws",
+    "claude",
+    "claude-code",
+    "claude-code-plugin",
+    "data-modelling",
+    "dynamodb",
+    "kensio",
+    "nosql",
+    "single-table",
+    "skill"
+  ],
+  "homepage": "https://kensio.ai",
+  "license": "Apache-2.0",
+  "author": "Kensio Software <hugh@kensiosoftware.co.uk>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KensioSoftware/kensio.ai.git",
+    "directory": "plugins/dynamodb-single-table"
+  },
+  "files": [
+    ".claude-plugin",
+    "skills",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

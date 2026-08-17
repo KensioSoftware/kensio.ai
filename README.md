@@ -11,7 +11,8 @@ from the Claude Code marketplace, from npm, or (later) as a downloadable archive
 The three testing skills are a set: `isolated-testing-style` is a way of writing tests, and
 `yulin-aws-simulation` and `part-factory-test-data` cover two Kensio packages that serve it.
 `technical-prose-style` and `github-issue-drafting` both cover writing, one for documentation and
-one for issue text. `skill-template` is the starting point for writing a new skill.
+one for issue text. `dynamodb-single-table` is a data modelling skill and stands on its own.
+`skill-template` is the starting point for writing a new skill.
 
 ## Install
 
@@ -65,6 +66,7 @@ Zips of each plugin will be published on kensio.ai for machines that have neithe
 | [`part-factory-test-data`](plugins/part-factory-test-data) | `@kensio/part-factory-test-data` | Building test data with [Part Factory](https://partfactory.dev/).                             |
 | [`technical-prose-style`](plugins/technical-prose-style)   | `@kensio/technical-prose-style`  | A measured prose style for documentation, with a checker calibrated on human writing.         |
 | [`github-issue-drafting`](plugins/github-issue-drafting)   | `@kensio/github-issue-drafting`  | Drafting GitHub issues grounded in the repository they are filed against.                     |
+| [`dynamodb-single-table`](plugins/dynamodb-single-table)   | `@kensio/dynamodb-single-table`  | Modelling DynamoDB data as one table, with keys built from the access patterns.               |
 | [`skill-template`](plugins/skill-template)                 | `@kensio/skill-template`         | Copy-and-edit starting point for writing a new skill.                                         |
 
 The first three are meant to be read together. `isolated-testing-style` is the philosophy, and the
@@ -162,7 +164,7 @@ created with `GITHUB_TOKEN` does not trigger workflow runs), and it is merged wi
 
 ### One version, everywhere
 
-All thirteen manifests (the root `package.json`, and each plugin's `package.json` and `plugin.json`)
+All fifteen manifests (the root `package.json`, and each plugin's `package.json` and `plugin.json`)
 carry the same number, written by [`set-version.mjs`](scripts/set-version.mjs). A version therefore
 means the same commit whether it came from the marketplace or from npm.
 
