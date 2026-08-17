@@ -1,7 +1,11 @@
 # @kensio/technical-prose-style
 
-A technical writing style for Claude Code, packaged as a skill. It targets five sentence shapes, and
-it ships the measurement that picked them.
+A technical writing style for Claude Code, packaged as a skill. It targets the constructions that
+make unedited LLM prose tiring to read, and it ships the measurement that picked them.
+
+The goal is prose that costs the reader less. Concealment is a different aim and out of scope. Text
+that follows every rule here is still identified as machine-written by a commercial detector, which
+was tested rather than assumed.
 
 Most writing guidance for LLMs is a list of banned words. Word lists can be obeyed completely while
 the prose still reads as machine-written, because the tells are syntactic. This skill was built by
@@ -40,6 +44,11 @@ replaces the process clock" is "time belongs to this instance", written backward
 
 **Colon explainer.** A colon joining a claim to a restatement of itself. 2.3 times, and it rose as
 em dashes were banned. The construction moved rather than went away.
+
+**One name for one thing.** Distinct words per 100 is the cleanest separator found: 15 human
+documents average 0.628 and none exceeds 0.664, while 55 LLM documents average 0.685 and none falls
+below 0.658. Human technical writing names a thing and goes on naming it that. It ships as advisory,
+because padding with repeated words would move the number the right way and make the prose worse.
 
 ## What it tells you to leave alone
 
