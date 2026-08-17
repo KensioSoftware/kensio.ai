@@ -1,0 +1,14 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "pangram-check",
+  "version": "1.11.0",
+  "description": "Check finished writing against the Pangram AI-text detector.",
+  "author": {
+    "name": "Kensio Software",
+    "email": "hugh@kensiosoftware.co.uk"
+  },
+  "homepage": "https://kensio.ai",
+  "repository": "https://github.com/KensioSoftware/kensio.ai",
+  "license": "Apache-2.0",
+  "keywords": ["writing", "pangram", "ai-detection", "prose", "markdown"]
+}

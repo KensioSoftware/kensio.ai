@@ -10,9 +10,10 @@ from the Claude Code marketplace, from npm, or (later) as a downloadable archive
 
 The three testing skills are a set: `isolated-testing-style` is a way of writing tests, and
 `yulin-aws-simulation` and `part-factory-test-data` cover two Kensio packages that serve it.
-`technical-prose-style` and `github-issue-drafting` both cover writing, one for documentation and
-one for issue text. `dynamodb-single-table` is a data modelling skill and stands on its own.
-`skill-template` is the starting point for writing a new skill.
+`technical-prose-style`, `pangram-check` and `github-issue-drafting` all cover writing. The first
+two are a pair, one measuring how prose reads and the other reporting what a detector makes of it,
+and the third covers issue text. `dynamodb-single-table` is a data modelling skill and stands on its
+own. `skill-template` is the starting point for writing a new skill.
 
 ## Install
 
@@ -65,6 +66,7 @@ Zips of each plugin will be published on kensio.ai for machines that have neithe
 | [`yulin-aws-simulation`](plugins/yulin-aws-simulation)     | `@kensio/yulin-aws-simulation`   | Testing AWS code with the [Yulin](https://yulinsim.dev/) in-process simulator.                |
 | [`part-factory-test-data`](plugins/part-factory-test-data) | `@kensio/part-factory-test-data` | Building test data with [Part Factory](https://partfactory.dev/).                             |
 | [`technical-prose-style`](plugins/technical-prose-style)   | `@kensio/technical-prose-style`  | A measured prose style for documentation, with a checker calibrated on human writing.         |
+| [`pangram-check`](plugins/pangram-check)                   | `@kensio/pangram-check`          | Running finished writing past the [Pangram](https://www.pangram.com) AI-text detector.        |
 | [`github-issue-drafting`](plugins/github-issue-drafting)   | `@kensio/github-issue-drafting`  | Drafting GitHub issues grounded in the repository they are filed against.                     |
 | [`dynamodb-single-table`](plugins/dynamodb-single-table)   | `@kensio/dynamodb-single-table`  | Modelling DynamoDB data as one table, with keys built from the access patterns.               |
 | [`skill-template`](plugins/skill-template)                 | `@kensio/skill-template`         | Copy-and-edit starting point for writing a new skill.                                         |
