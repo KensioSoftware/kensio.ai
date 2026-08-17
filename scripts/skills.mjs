@@ -23,6 +23,19 @@ export function pluginNames(root = repoRoot) {
 }
 
 /**
+ * Every directory that npm publishes from, as a repo-relative path.
+ *
+ * The plugins, and the installer beside them. A new plugin folder joins this
+ * list by existing, which is why nothing has to be told about one.
+ */
+export function publishablePackages(root = repoRoot) {
+  return [
+    ...pluginNames(root).map((name) => `plugins/${name}`),
+    ...directoriesIn(join(root, "packages")).map((name) => `packages/${name}`),
+  ];
+}
+
+/**
  * Every skill in the repository, as `{ plugin, name, dir, skillFile }`.
  *
  * A plugin may hold more than one skill. None does today, and nothing here

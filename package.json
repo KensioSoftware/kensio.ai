@@ -16,6 +16,7 @@
     "check:versions": "node scripts/check-versions.mjs",
     "bundle": "node scripts/bundle-skills.mjs",
     "zips": "node scripts/build-zips.mjs",
+    "bootstrap:npm": "node scripts/bootstrap-npm.mjs",
     "prose": "node plugins/technical-prose-style/skills/technical-prose-style/scripts/prose-check.mjs plugins packages/skills-cli/README.md README.md",
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",

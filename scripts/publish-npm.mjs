@@ -23,14 +23,14 @@
 // tries to clone github.com/plugins/<name>.git.
 
 import { spawnSync } from "node:child_process";
-import { readdirSync, readFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { publishablePackages, repoRoot } from "./skills.mjs";
 
 const version = process.argv[2];
 // Exercising this script should never be able to touch the registry by accident.
 const dryRun = process.argv.includes("--dry-run");
-const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const root = repoRoot;
 
 if (process.env.PUBLISH_NPM !== "true") {
   console.log(
@@ -49,12 +49,7 @@ if (bundled.status !== 0) {
   process.exit(1);
 }
 
-const plugins = [
-  ...readdirSync(join(root, "plugins"), { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => `plugins/${entry.name}`),
-  "packages/skills-cli",
-];
+const plugins = publishablePackages(root);
 
 // Trusted publishing cannot create a package that does not exist yet, because a
 // trusted publisher is configured against a package that is already on npm. The
@@ -102,18 +97,16 @@ if (needBootstrap.length > 0) {
   );
   for (const plugin of needBootstrap) console.log(`    ${packageName(plugin)}`);
   console.log("");
-  console.log("  Run these from a clean checkout, then add a trusted publisher for each package");
-  console.log("  under Settings, Trusted Publisher on npmjs.com. See the README.");
+  console.log("  Run these on a machine with an npm login, then add a trusted publisher for each");
+  console.log("  package under Settings, Trusted Publisher on npmjs.com. See the README.");
   console.log("");
   console.log(`    git checkout v${version}`);
   console.log(`    node scripts/set-version.mjs ${version}`);
-  for (const plugin of needBootstrap) {
-    console.log(`    npm publish ./${plugin} --access public`);
-  }
+  console.log("    node scripts/bootstrap-npm.mjs --publish");
   console.log("");
   console.log("  set-version is the step that is easy to miss. semantic-release tags the commit");
   console.log("  before it writes the version out, so the manifests at the tag still carry the");
-  console.log("  previous number.");
+  console.log("  previous number. bootstrap-npm refuses to run when they disagree.");
 }
 
 // Reported after the bootstrap notice, so a real failure never hides the one

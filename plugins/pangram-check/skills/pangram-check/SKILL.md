@@ -1,6 +1,10 @@
 ---
 name: pangram-check
 description: Send the prose of a finished document to Pangram, a commercial AI-text detector, and report which passages read as machine-drafted, with the source line each one starts on. Use when the user asks to "check this with Pangram", "run the AI detector over this", "see if this still reads as AI", or wants a final sweep after rewriting a draft. Every run is paid and sends the writing to a third party, so this skill is invoked by name.
+license: Apache-2.0
+compatibility: Needs a Pangram API key and network access. Every run is billed.
+metadata:
+  version: "1.11.0"
 disable-model-invocation: true
 ---
 
@@ -11,11 +15,12 @@ and reports which parts read as machine-drafted, so a long document gets a passa
 answer.
 
 ```bash
-node skills/pangram-check/scripts/pangram-check.mjs path/to/file.md
+node scripts/pangram-check.mjs path/to/file.md
 ```
 
-Full flag list and config file in [reference/configuration.md](reference/configuration.md). Field
-meanings and how to read a verdict in [reference/reading-results.md](reference/reading-results.md).
+Full flag list and config file in [references/configuration.md](references/configuration.md). Field
+meanings and how to read a verdict in
+[references/reading-results.md](references/reading-results.md).
 
 ## Confirm before spending a call
 
@@ -35,7 +40,7 @@ stop there.
 On a machine that has not run this before:
 
 ```bash
-node skills/pangram-check/scripts/pangram-check.mjs --check-key
+node scripts/pangram-check.mjs --check-key
 ```
 
 That checks the key against `GET /models` and spends no detection call. With no key found, the

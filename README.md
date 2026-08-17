@@ -165,6 +165,9 @@ pnpm check
 - `pnpm bundle` — copies the skills into `@kensio/skills`, where the installer reads them. Generated
   and gitignored, rebuilt on every pack and before every publish.
 - `pnpm zips` — builds the release archives into `dist/`, one per skill and one holding all of them.
+- `pnpm bootstrap:npm` — reports which packages the registry has never seen. Publishing them is the
+  one step a release cannot do for itself, and `--publish` is what does it. See
+  [Bootstrapping a package onto npm](#bootstrapping-a-package-onto-npm).
 
 Formatter settings live in [`.oxfmtrc.json`](.oxfmtrc.json). Two of them are deliberate:
 `proseWrap: "always"` rewraps Markdown prose at `printWidth`, so paragraphs never need wrapping by
@@ -246,29 +249,32 @@ on npmjs.com before it can be published this way.
 
 #### Bootstrapping a package onto npm
 
-Trusted publishing is configured on a package's settings page on npmjs.com, which means the package
-has to exist before it can be configured. npm has no equivalent of PyPI's pending publishers, and
-the first version of every package is published by hand.
+Trusted publishing is configured on a package's settings page on npmjs.com. The package has to exist
+before it can be configured. npm has no equivalent of PyPI's pending publishers, so the first
+version of every package goes up from a machine with an `npm login` on it.
 
 ```bash
 git checkout v<version>
 node scripts/set-version.mjs <version>
-node scripts/bundle-skills.mjs            # only for ./packages/skills-cli
-npm publish ./plugins/<name> --access public
+pnpm bootstrap:npm                        # a report
+node scripts/bootstrap-npm.mjs --publish  # the real thing
 ```
 
-`@kensio/skills` is bootstrapped the same way, from `./packages/skills-cli`. Its `skills/` directory
-is generated, so the bundle step above has to run first or it publishes an installer with nothing in
-it.
+[`bootstrap-npm.mjs`](scripts/bootstrap-npm.mjs) finds every package the registry has never seen,
+bundles the skills into the installer first, and publishes the ones that are missing. Without
+`--publish` it only reports. Run it that way first.
 
-`set-version` is the step that is easy to miss. semantic-release tags the commit before it writes
-the version into the manifests. A clean checkout of the tag still carries the previous number, and
-publishing straight from it would put the wrong version on npm.
+It refuses a dirty working tree, a commit that carries no release tag, a manifest at a different
+version from the root, and an npm that cannot say whether a package exists. Each of those is a way
+to put something wrong on the registry permanently.
 
-The `./` prefix is load-bearing. npm reads a bare `plugins/<name>` as the GitHub shorthand
-`owner/repo` and tries to clone it. That first version carries no provenance attestation, because
-provenance is minted from the workflow's OIDC token and there is no workflow involved. Every version
-after it does.
+`set-version` is the step that is easy to miss, and it is why the tag check is there.
+semantic-release tags the commit before it writes the version into the manifests. A clean checkout
+of the tag still carries the previous number, and publishing straight from it would put the wrong
+version on npm.
+
+That first version carries no provenance attestation, because provenance is minted from the
+workflow's OIDC token and there is no workflow involved. Every version after it does.
 
 Then, for each package, under **Settings → Trusted Publisher** on npmjs.com:
 

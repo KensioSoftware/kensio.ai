@@ -15,8 +15,8 @@ import { existsSync } from "node:fs";
 import { join, relative } from "node:path";
 import { readSkill, repoRoot, skills } from "./skills.mjs";
 
-/** Every frontmatter key the specification defines. Anything else fails. */
-const ALLOWED_KEYS = new Set([
+/** Every frontmatter key the specification defines. */
+const SPEC_KEYS = new Set([
   "name",
   "description",
   "license",
@@ -24,6 +24,21 @@ const ALLOWED_KEYS = new Set([
   "metadata",
   "allowed-tools",
 ]);
+
+/**
+ * Vendor keys carried on purpose, and what they cost.
+ *
+ * The specification says anything outside its own list fails validation, so a
+ * strict reader elsewhere may refuse a skill that carries one of these. That is
+ * the trade being made each time a name goes in here, and it needs a reason
+ * worth more than the portability.
+ *
+ * `disable-model-invocation` is Claude Code's, and it stops a skill loading on
+ * its own. `pangram-check` bills the user per run, so the skill firing by itself
+ * costs money. A skill that fails to load under a strict validator is the
+ * cheaper failure.
+ */
+const VENDOR_KEYS = new Map([["disable-model-invocation", new Set(["pangram-check"])]]);
 
 /**
  * Skills allowed to name this repository's layout in their bodies.
@@ -69,7 +84,14 @@ for (const skill of found) {
   }
 
   for (const key of Object.keys(fields)) {
-    if (!ALLOWED_KEYS.has(key)) fail(`frontmatter key "${key}" is not in the specification`);
+    if (SPEC_KEYS.has(key)) continue;
+    if (VENDOR_KEYS.get(key)?.has(skill.name)) {
+      console.warn(
+        `  ! ${where} carries "${key}", which is outside the specification. A strict reader may refuse the skill.`,
+      );
+      continue;
+    }
+    fail(`frontmatter key "${key}" is not in the specification`);
   }
 
   const name = fields.name ?? "";

@@ -1,7 +1,7 @@
 # @kensio/pangram-check
 
 Runs a finished document past [Pangram](https://www.pangram.com), a commercial AI-text detector, and
-reports which passages read as machine-drafted. Packaged as a Claude Code skill.
+reports which passages read as machine-drafted. Packaged as an agent skill.
 
 Only the prose is sent. The script strips frontmatter, code, HTML, shortcodes, tables and headings
 first, then maps every result Pangram returns back to the source line it came from, so a flagged
@@ -11,18 +11,33 @@ Pangram is a paid service and the skill needs an API key. It runs when a user as
 
 ## Install
 
-From the marketplace:
+Into any agent that reads `SKILL.md`:
+
+```bash
+npx @kensio/skills add pangram-check
+```
+
+That copies the skill directory into `.agents/skills/`, where Codex, Cursor, Copilot, Gemini CLI and
+the other implementations of the specification look for one. Pass `--agent claude` for
+`.claude/skills/`, `--agent copilot` for `.github/skills/`, and `--user` to install it for every
+project at once.
+
+Claude Code also takes it as a plugin:
 
 ```bash
 claude plugin marketplace add KensioSoftware/kensio.ai
 claude plugin install pangram-check@kensio
 ```
 
-From npm:
+Or pin it in a repository as a dependency:
 
 ```bash
 npm install @kensio/pangram-check
 ```
+
+Every skill is also published as a zip on each
+[release](https://github.com/KensioSoftware/kensio.ai/releases), for a machine with no npm reach.
+Unzip it into `.agents/skills/` and it is installed.
 
 ## Set up the key
 
