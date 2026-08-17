@@ -1,6 +1,6 @@
 {
   "name": "@kensio/skill-template",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "description": "A copy-and-edit starting point for writing a new Claude Code skill, covering SKILL.md frontmatter, description wording, and progressive disclosure.",
   "keywords": [
     "claude",
