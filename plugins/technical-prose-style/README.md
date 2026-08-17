@@ -50,6 +50,13 @@ documents average 0.628 and none exceeds 0.664, while 55 LLM documents average 0
 below 0.658. Human technical writing names a thing and goes on naming it that. It ships as advisory,
 because padding with repeated words would move the number the right way and make the prose worse.
 
+## Short listing strings
+
+The rules above are calibrated on documents of 200 words and more. A package description or a card
+subtitle is a different genre, and the skill carries a separate section for it. Forty descriptions
+from long-established npm packages have a median length of seven words, and not one of them uses the
+`Thing for X: doing A, doing B, and doing C` shape that an LLM reaches for every time.
+
 ## What it tells you to leave alone
 
 The measurement also found what fails to separate good prose from bad. That turns out to be most of

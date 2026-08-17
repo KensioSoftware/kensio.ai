@@ -1,7 +1,7 @@
 {
   "name": "@kensio/isolated-testing-style",
   "version": "1.7.1",
-  "description": "An opinionated testing style: start from given/when/then, fake collaborators by simulation, get isolation from randomised data instead of setup and teardown, and assert on behaviour.",
+  "description": "An opinionated testing style built on simulated collaborators and randomised data.",
   "keywords": [
     "claude",
     "claude-code",

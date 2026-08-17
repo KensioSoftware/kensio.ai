@@ -1,7 +1,7 @@
 {
   "name": "@kensio/technical-prose-style",
   "version": "1.7.1",
-  "description": "Plain technical prose for docs, READMEs, comments and commit messages: five measured sentence shapes to remove, the style rules that turn out not to matter, and a script that scores prose against Django, Go, Rust and Python documentation.",
+  "description": "A measured prose style for documentation, with a checker calibrated on human technical writing.",
   "keywords": [
     "claude",
     "claude-code",

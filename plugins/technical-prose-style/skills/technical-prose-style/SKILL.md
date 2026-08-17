@@ -201,6 +201,38 @@ whole document rather than a defect at a point, so there is no line to go and fi
 trivially gamed by padding with repeated words, which would move the number the right way while
 making the prose worse.
 
+## Short strings are a different genre
+
+Everything above is calibrated on documents of 200 words and more, and the checker refuses to score
+anything shorter. A package description, a plugin listing, a meta description or a card subtitle is
+a different problem, and the rules above get it wrong in both directions.
+
+Forty descriptions from long-established npm packages (express, lodash, axios, webpack, eslint and
+the like) against five written by Claude for this repository:
+
+|                                            | Human npm   | Claude   |
+| ------------------------------------------ | ----------- | -------- |
+| Median length                              | **7 words** | 38 words |
+| Noun phrase followed by a colon and a list | **0 of 40** | 4 of 5   |
+| Three-item list                            | 2 of 40     | 5 of 5   |
+
+Nothing in the human set uses the shape. Not one. So for a short listing string:
+
+- **Say what the thing is, in one declarative clause.** "Promise based HTTP client for the browser
+  and node.js". "Terminal string styling done right". Seven words is a normal length.
+- **No colon followed by a catalogue.** `Thing for X: doing A, doing B, and doing C` is the shape to
+  avoid, and it is the shape Claude reaches for every time. The permission for a list-introducing
+  colon in the section above applies to prose, and it does not extend to this.
+- **No three-item list**, however tempting. The finding that triples are a human marker holds for
+  prose inside a document, and it inverts here.
+- **Do not enumerate what the thing covers.** The detail belongs in the body, which a listing page
+  renders directly underneath. Enumerating in the description says it twice.
+- **Avoid coy abstraction.** "The style rules that turn out not to matter" withholds the content and
+  gestures at it. Either name the thing or leave it out.
+
+One human description in the forty ran to 37 words. It did it as three separate sentences, not as a
+colon and a list.
+
 ## What not to change
 
 These are the measured non-differences. Acting on them costs effort and makes the prose worse.
