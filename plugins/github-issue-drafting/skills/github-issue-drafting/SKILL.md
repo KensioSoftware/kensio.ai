@@ -3,7 +3,7 @@ name: github-issue-drafting
 description: Draft a GitHub issue from a short note or a rough idea, grounding every claim about the code in the repository the issue will be filed against, splitting work that is really two issues, and filing it with `gh` once the user has approved the draft. Use when turning a to-do item, a Slack message, a code TODO, a failing test or a bug report into an issue, when asked to "write up an issue for" something, to "raise", "file" or "open an issue", when asked whether something should be one issue or several, and when tidying the titles, types or labels of issues that already exist.
 license: Apache-2.0
 metadata:
-  version: "1.11.0"
+  version: "1.13.0"
 ---
 
 # GitHub issue drafting
