@@ -17,7 +17,7 @@ This skill serves the `isolated-testing-style` skill, the general argument for s
 stubs.
 
 Yulin is deliberately flexible, and plenty of shapes work. What follows is the recommended way to
-get the most out of it, not a set of rules. Each one says what it buys. A situation that does not
+get the most out of it, offered as guidance. Each one says what it buys. A situation that does not
 want that trade can go the other way knowingly.
 
 ## Use what Yulin already gives you
@@ -41,9 +41,9 @@ exercise, then assert by reading the simulation back. A wrapper around any of th
 one thing a reader of the test needs to see, and it has to be maintained forever after.
 
 If a sequence genuinely repeats, make it a small function in the same test file, and keep it
-returning the simulation objects themselves, not a bespoke shape of its own. The point at which it
-wants a class, an options interface, or a directory, it has stopped being test setup and become a
-second product.
+returning the simulation objects themselves. A bespoke return shape starts hiding them. The point at
+which it wants a class, an options interface, or a directory, it has stopped being test setup and
+become a second product.
 
 ## One synthesized template, for tests, local dev and production
 
@@ -119,8 +119,8 @@ both already in production:
 - A Cognito `SECRET_HASH` computed the wrong way. The stub had accepted that too, because a stub is
   never going to verify a signature.
 
-Intercept the class, not the instance, in most cases, since the code under test usually constructs
-its own clients. Intercept an instance when only one client should reach the simulation.
+Intercept the class in most cases, since the code under test usually constructs its own clients.
+Intercept an instance when only one client should reach the simulation.
 
 Each `SimSdk` owns a `SimAws`, reachable as `simSdk.simAws` for seeding and inspecting state. Pass
 an existing one with `new SimSdk({ simAws })` to share.
@@ -129,8 +129,8 @@ an existing one with `new SimSdk({ simAws })` to share.
 
 Interception replaces `send` on the thing it is given. It has to be given the client the code under
 test actually calls. The wrapper clients are where this bites. A `DynamoDBDocumentClient` built over
-a `DynamoDBClient` is what the code sends through. It is the document client that needs
-intercepting, not the client underneath it.
+a `DynamoDBClient` is what the code sends through. The document client is the one that needs
+intercepting.
 
 ```typescript
 using simSdk = new SimSdk();
@@ -200,7 +200,7 @@ This is where simulation pays off over stubs a second time. A call-count asserti
 today's implementation. A state assertion holds however the handler is rewritten, and it fails if
 the call was made in a way the real service would have rejected.
 
-## Match service errors by name, not instanceof
+## Match service errors by name
 
 ```typescript
 // Wrong. Passes in production, fails against the simulator.
@@ -215,8 +215,8 @@ one copy of the SDK package is in play. Two copies in the module graph, a bundle
 raising its own classes, and it silently stops matching. Yulin's errors carry the service's real
 error names and SDK-shaped `$metadata`, but they are not instances of the SDK classes.
 
-This is worth fixing in production code, not worked around in tests. `name` is what the wire
-carries. The `name` check is the one that is right in both places. A version skew between two
+This is worth fixing in production code, and working around it in tests hides it. `name` is what the
+wire carries. The `name` check is the one that is right in both places. A version skew between two
 `@aws-sdk/client-*` packages breaks `instanceof` in production too, just less predictably than the
 simulator does.
 
@@ -232,7 +232,7 @@ properties from the synthesized template until it deploys, keeping a list, then 
 upstream.
 
 ```typescript
-// A throwaway transform used to find the floor, not to keep.
+// A throwaway transform used to find the floor. Delete it afterwards.
 function stripUntilItDeploys(template: CfnTemplateBodyRecord): CfnTemplateBodyRecord {
   // Remove one refused property, re-run, record the next refusal, repeat.
   // Keep the list. Raise it as one issue.
@@ -249,9 +249,8 @@ trusting a test that depends on the setting.
 
 ## Raise gaps upstream, and weight false passes far above false refusals
 
-Fix gaps on [the Yulin repository](https://github.com/KensioSoftware/yulin) rather than working
-around them locally. A local workaround has to be maintained in every project that hits the same
-gap.
+Fix gaps on [the Yulin repository](https://github.com/KensioSoftware/yulin) at source. A local
+workaround has to be maintained in every project that hits the same gap.
 
 When reporting, the asymmetry matters more than the volume:
 
@@ -272,7 +271,7 @@ with the property and the template that carries it.
 
 Vitest gives each test file its own worker, so module-level state is already isolated between files.
 Deploy a stack once for the file and let the tests share it. Isolation inside the file comes from
-randomised names, not from rebuilding the environment.
+randomised names. Rebuilding the environment buys nothing.
 
 ```typescript
 let simAws: SimAws;
@@ -303,9 +302,9 @@ same state is the beginning of the harness this skill opens by arguing against.
 
 ## Run the handler as a real simulated Lambda
 
-Yulin can run an in-process handler as a function in the simulation, rather than calling it
-directly. Its SDK calls are routed into the simulation as the execution role. The IAM policies in
-the template are exercised too.
+Yulin can run an in-process handler as a function inside the simulation, in place of a direct call
+from the test. Its SDK calls are routed into the simulation as the execution role. The IAM policies
+in the template are exercised too.
 
 Bind a handler to a template function at deploy time with `bindings`:
 

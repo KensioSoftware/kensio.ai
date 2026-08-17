@@ -48,9 +48,9 @@ The type can go on saying what is actually required.
 
 ## Overrides are a deep partial
 
-Overrides merge into the defaults rather than replacing them, all the way down the nested structure.
-That is what makes "state only what matters" possible. A test can set one field three levels deep
-and leave its siblings alone.
+Overrides merge into the defaults, all the way down the nested structure. That is what makes "state
+only what matters" possible. A test can set one field three levels deep and leave its siblings
+alone.
 
 Two consequences worth knowing:
 
@@ -84,10 +84,10 @@ export const customerFactory = new DynamicFactory<Customer>(() => ({
 }));
 ```
 
-## Do not add a variant for every case
+## Add a variant only for a shared meaning
 
 A variant earns its name when several tests mean the same thing by it. One test that needs an
-unusual value should write that value down, not gain a factory of its own in a file somewhere else.
+unusual value should write that value down inline, and leave the factories alone.
 
 The failure mode is a directory of `cancelledOrderWithRefundAndNoAddressFactory` names, each used
 once, where reading a test means going to find out what its factory actually sets. Writing the field
@@ -136,7 +136,7 @@ Keep each dependency as narrow as the factory actually needs. An `OrderStore` is
 whole application never is. A wide dependency is how state starts leaking between tests that were
 supposed to be independent.
 
-## Do not wrap a factory in a function that applies overrides
+## Call the factory directly
 
 ```typescript
 // Anti-pattern. This is make(overrides) with extra steps.
@@ -148,7 +148,7 @@ export function makeCustomer(overrides: Partial<Customer> = {}): Customer {
 `make(overrides)` already is that function, and it does the job better. Its overrides are partial
 all the way down the nested structure, where the spread above replaces a nested object whole.
 
-A wrapper that does anything more than pass overrides through is a signal to read rather than to
+A wrapper that does anything more than pass overrides through is a signal to read and never to
 write. It usually means one of two things:
 
 - **The factory is the wrong shape.** The wrapper is computing something the defaults should be

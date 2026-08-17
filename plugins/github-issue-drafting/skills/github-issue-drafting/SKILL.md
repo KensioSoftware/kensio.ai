@@ -45,7 +45,7 @@ The failure mode that matters is invention. A feature called missing when it hal
 architecture nobody built, acceptance criteria assuming decisions nobody has made. A note is too
 short to carry that context. The repository has to supply it.
 
-Budget a handful of tool calls for this, not an audit.
+Budget a handful of tool calls for this. A full audit is more than the draft needs.
 
 - **Locate the area.** Grep for the nouns and identifiers in the note. A `README`, an architecture
   doc or the directory layout usually points at the right subtree in one step.
@@ -89,7 +89,7 @@ together, each one naming its dependency and using **Out of scope** to hand work
 ## Drafting rules
 
 - **Keep it short, and shorter than feels right.** Roughly 200 to 350 words of prose plus at most
-  one example. Three or four sections, not eight. Six acceptance criteria, not twelve. Cut any
+  one example. Three or four sections at most, and no more than six acceptance criteria. Cut any
   section that fails to help a reader understand, implement, test or evaluate the change.
 - **The design discussion in chat is not the issue.** Working a note through produces rejected
   alternatives, trade-offs and cost estimates, and almost none of it belongs in the body. Record the

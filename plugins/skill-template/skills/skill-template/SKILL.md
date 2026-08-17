@@ -25,7 +25,7 @@ plugins/<skill-name>/
 ```
 
 Anything under `skills/` ships, because that is what `package.json` lists in `files`. A script the
-skill runs belongs there, not at the plugin root.
+skill runs belongs there too, and never at the plugin root.
 
 **A plugin folder must be self-contained.** Never reference files outside it with `../`, because
 plugins are copied, zipped, and installed standalone, so those paths will not resolve.
@@ -71,9 +71,9 @@ description: <what it does, then when to use it. Include the words and phrases a
 
 ## Writing the body
 
-Keep `SKILL.md` short and imperative. It is instructions for Claude, not documentation for a human.
-Push detail into sibling files (`reference/`, `examples/`) and link to them. The body stays cheap to
-load and the details are read only when needed.
+Keep `SKILL.md` short and imperative. It is instructions for Claude. Documentation for a human
+belongs in the README. Push detail into sibling files (`reference/`, `examples/`) and link to them.
+The body stays cheap to load and the details are read only when needed.
 
 ## Prose
 
