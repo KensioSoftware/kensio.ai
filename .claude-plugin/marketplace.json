@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "isolated-testing-style",
-      "description": "An opinionated testing style: start from given/when/then, use real collaborators through simulation instead of stubs, take isolation from randomised data instead of shared setup and teardown, and assert behaviour instead of call counts.",
+      "description": "An opinionated testing style: start from given/when/then, fake collaborators by simulation, get isolation from randomised data instead of setup and teardown, and assert on behaviour.",
       "source": "./plugins/isolated-testing-style",
       "author": {
         "name": "Kensio Software",

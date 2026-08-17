@@ -16,6 +16,10 @@ const marketplace = JSON.parse(
   readFileSync(resolve(root, ".claude-plugin/marketplace.json"), "utf8"),
 );
 const listed = new Set((marketplace.plugins ?? []).map((p) => p.name));
+// The website, npm and the marketplace listing all show this string, and the site
+// prefers the marketplace entry over the SKILL.md frontmatter, so a drift between
+// the three manifests ships as three different descriptions of one skill.
+const listedDescriptions = new Map((marketplace.plugins ?? []).map((p) => [p.name, p.description]));
 
 const readJson = (path) => JSON.parse(readFileSync(path, "utf8"));
 const problems = [];
@@ -57,6 +61,12 @@ for (const dir of dirs) {
   if (!listed.has(dir)) {
     problems.push(`${dir}: not listed in .claude-plugin/marketplace.json`);
   }
+  if (plugin.description !== pkg.description) {
+    problems.push(`${dir}: plugin.json and package.json descriptions differ`);
+  }
+  if (listed.has(dir) && listedDescriptions.get(dir) !== plugin.description) {
+    problems.push(`${dir}: marketplace.json description differs from plugin.json`);
+  }
   console.log(`  ${dir} @ ${plugin.version}`);
 }
 
@@ -67,9 +77,9 @@ for (const name of listed) {
 }
 
 if (problems.length > 0) {
-  console.error("\n✖ Version / naming check failed:");
+  console.error("\n✖ Version / naming / description check failed:");
   for (const problem of problems) console.error(`  - ${problem}`);
   process.exit(1);
 }
 
-console.log(`\n✔ Versions and names are consistent, all at ${rootVersion}`);
+console.log(`\n✔ Versions, names and descriptions are consistent, all at ${rootVersion}`);
