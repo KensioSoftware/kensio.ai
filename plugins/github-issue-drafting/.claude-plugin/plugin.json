@@ -1,0 +1,14 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "github-issue-drafting",
+  "version": "1.7.1",
+  "description": "A way of drafting GitHub issues that checks every claim against the repository first.",
+  "author": {
+    "name": "Kensio Software",
+    "email": "hugh@kensiosoftware.co.uk"
+  },
+  "homepage": "https://kensio.ai",
+  "repository": "https://github.com/KensioSoftware/kensio.ai",
+  "license": "Apache-2.0",
+  "keywords": ["github", "issues", "gh", "drafting", "triage"]
+}
