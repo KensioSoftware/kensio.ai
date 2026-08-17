@@ -45,9 +45,13 @@ plugins are copied, zipped, and installed standalone, so those paths will not re
 7. Run `pnpm check`. This validates the manifests, asserts the lockstep version, and runs the prose
    gate described below.
 
-Everything else is automatic. `scripts/set-version.mjs` and `scripts/publish-npm.mjs` both read the
-`plugins/` directory, so a new folder is versioned and published to npm on the next release without
-being listed anywhere.
+`scripts/set-version.mjs` and `scripts/publish-npm.mjs` both read the `plugins/` directory, so a new
+folder is versioned and included in the next release without being listed anywhere.
+
+**A brand new package still needs one manual first publish.** npm trusted publishing cannot create a
+package that does not exist, because the trusted publisher is configured against a package already
+on the registry. The release reports the commands and carries on. See "npm publishing" in the
+repository README.
 
 ## SKILL.md frontmatter
 

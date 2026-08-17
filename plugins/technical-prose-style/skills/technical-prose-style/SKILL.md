@@ -1,6 +1,6 @@
 ---
 name: technical-prose-style
-description: Write documentation, READMEs, code comments, commit messages, release notes and PR text as plain technical prose, by removing the five sentence shapes that make machine-written text recognisable. Significance tails, contrastive definition, negation framing, appositive tails and colon explainers. Ships a script that scores prose against Django and Go documentation. Use when writing or editing docs, a README, a changelog, a blog post or any prose for human readers, when asked to improve, tighten or rewrite writing, when prose "sounds like AI" or "sounds like Claude", and when reviewing documentation in a pull request.
+description: Write documentation, READMEs, code comments, commit messages, release notes and PR text as plain technical prose, by removing the five sentence shapes that make machine-written text recognisable. Significance tails, contrastive definition, negation framing, appositive tails and colon explainers. Ships a script that scores prose against Django, Go, Rust and Python documentation. Use when writing or editing docs, a README, a changelog, a blog post or any prose for human readers, when asked to improve, tighten or rewrite writing, when prose "sounds like AI" or "sounds like Claude", and when reviewing documentation in a pull request.
 ---
 
 # Technical prose style

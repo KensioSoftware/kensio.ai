@@ -43,7 +43,7 @@
     },
     {
       "name": "technical-prose-style",
-      "description": "Plain technical prose for docs, READMEs, comments and commit messages: five measured sentence shapes to remove, the style rules that turn out not to matter, and a script that scores prose against Django and Go documentation.",
+      "description": "Plain technical prose for docs, READMEs, comments and commit messages: five measured sentence shapes to remove, the style rules that turn out not to matter, and a script that scores prose against Django, Go, Rust and Python documentation.",
       "source": "./plugins/technical-prose-style",
       "author": {
         "name": "Kensio Software",

@@ -176,6 +176,13 @@ anything becomes permanent on npm. Until it is set, releases are tagged on GitHu
 gh variable set PUBLISH_NPM --body true
 ```
 
+`publish-npm.mjs` also takes `--dry-run`, which packs each plugin and skips the upload, so the
+script can be exercised locally without touching the registry:
+
+```bash
+PUBLISH_NPM=true node scripts/publish-npm.mjs 1.0.0 --dry-run
+```
+
 Authentication is npm [trusted publishing](https://docs.npmjs.com/trusted-publishers) over OIDC,
 there is no npm token in this repository. Each package needs its trusted publisher configured once
 on npmjs.com before it can be published this way.
