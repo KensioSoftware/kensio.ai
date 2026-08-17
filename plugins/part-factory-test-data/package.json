@@ -1,6 +1,6 @@
 {
   "name": "@kensio/part-factory-test-data",
-  "version": "1.7.1",
+  "version": "1.8.0",
   "description": "How to build typed test data with @kensio/part-factory factories.",
   "keywords": [
     "claude",
