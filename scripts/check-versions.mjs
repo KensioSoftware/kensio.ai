@@ -1,15 +1,16 @@
 #!/usr/bin/env node
 // Skills are versioned in lockstep: the root package.json, every plugin's
-// package.json and every plugin's plugin.json carry the same number, so a given
-// version means the same commit on the marketplace and on npm. The release
-// workflow is what moves them, all at once — nothing here should be edited by
-// hand. This check fails the build when any of them drift apart.
+// package.json, every plugin's plugin.json and the metadata.version in every
+// SKILL.md carry the same number, so a given version means the same commit on
+// the marketplace, on npm, and in a skill directory someone copied out of a zip.
+// The release workflow is what moves them, all at once — nothing here should be
+// edited by hand. This check fails the build when any of them drift apart.
 
-import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { readSkill, repoRoot, skills } from "./skills.mjs";
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const root = repoRoot;
 const pluginsDir = resolve(root, "plugins");
 
 const marketplace = JSON.parse(
@@ -26,9 +27,17 @@ const problems = [];
 
 const rootVersion = readJson(resolve(root, "package.json")).version;
 
-const dirs = readdirSync(pluginsDir, { withFileTypes: true })
-  .filter((entry) => entry.isDirectory())
-  .map((entry) => entry.name);
+const found = skills(root);
+const dirs = Array.from(new Set(found.map((skill) => skill.plugin)));
+
+for (const skill of found) {
+  const { metadata } = readSkill(skill);
+  if (metadata.version !== rootVersion) {
+    problems.push(
+      `${skill.plugin}: SKILL.md metadata.version is ${metadata.version ?? "missing"}, expected ${rootVersion}`,
+    );
+  }
+}
 
 for (const dir of dirs) {
   const pluginJsonPath = resolve(pluginsDir, dir, ".claude-plugin/plugin.json");
@@ -75,6 +84,19 @@ for (const name of listed) {
     problems.push(`${name}: listed in marketplace.json but has no plugins/${name} folder`);
   }
 }
+
+// The installer carries a copy of every skill, so it is released with them and
+// versioned with them. It is not a plugin and has no marketplace entry.
+const cli = readJson(resolve(root, "packages/skills-cli/package.json"));
+if (cli.version !== rootVersion) {
+  problems.push(
+    `skills-cli: version ${cli.version} !== root package.json version ${rootVersion} (versions move in lockstep)`,
+  );
+}
+if (cli.name !== "@kensio/skills") {
+  problems.push(`skills-cli: package.json name is "${cli.name}", expected "@kensio/skills"`);
+}
+console.log(`  skills-cli @ ${cli.version}`);
 
 if (problems.length > 0) {
   console.error("\n✖ Version / naming / description check failed:");

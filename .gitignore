@@ -141,3 +141,7 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Generated: the installer package's copy of the skills, and the release zips.
+packages/skills-cli/skills/
+dist/

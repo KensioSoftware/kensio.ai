@@ -50,6 +50,12 @@ jobs:
           npm install -g --allow-scripts=@anthropic-ai/claude-code @anthropic-ai/claude-code
           claude --version
 
+      # First, because it is the check that does not care about Claude Code. A
+      # skill that fails the specification is broken for every agent, and the
+      # marketplace validation below would still pass on it.
+      - name: Validate skills against the Agent Skills specification
+        run: pnpm validate:skills
+
       - name: Validate marketplace and plugin manifests
         run: pnpm validate
 
@@ -64,9 +70,13 @@ jobs:
 
       # Packed per directory with npm rather than `pnpm pack -r`, to match how
       # publish-npm.mjs actually publishes, and because `pnpm pack -r` also packs
-      # the private root.
-      - name: Check each plugin packs cleanly
+      # the private root. The installer packs its bundled copy of the skills from
+      # a prepack hook, so this also proves that hook still works.
+      - name: Check each package packs cleanly
         run: |
-          for plugin in plugins/*/; do
-            npm pack --dry-run "$plugin"
+          for package in plugins/*/ packages/*/; do
+            npm pack --dry-run "$package"
           done
+
+      - name: Check the release archives build
+        run: pnpm zips

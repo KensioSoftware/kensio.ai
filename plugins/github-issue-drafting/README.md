@@ -1,7 +1,7 @@
 # @kensio/github-issue-drafting
 
-A way of turning a one-line note into a GitHub issue somebody can act on, packaged as a skill for
-Claude Code.
+A way of turning a one-line note into a GitHub issue somebody can act on, packaged as an agent
+skill.
 
 The note is the easy part. "SSM params", "fix the retry backoff", "the CLI hangs on empty input" all
 carry enough for the person who wrote them and too little for anybody else. Handed straight to an
@@ -9,18 +9,33 @@ LLM they produce a polished issue full of invented detail, which is worse than t
 
 ## Install
 
-From the marketplace:
+Into any agent that reads `SKILL.md`:
+
+```bash
+npx @kensio/skills add github-issue-drafting
+```
+
+That copies the skill directory into `.agents/skills/`, where Codex, Cursor, Copilot, Gemini CLI and
+the other implementations of the specification look for one. Pass `--agent claude` for
+`.claude/skills/`, `--agent copilot` for `.github/skills/`, and `--user` to install it for every
+project at once.
+
+Claude Code also takes it as a plugin:
 
 ```bash
 claude plugin marketplace add KensioSoftware/kensio.ai
 claude plugin install github-issue-drafting@kensio
 ```
 
-From npm:
+Or pin it in a repository as a dependency:
 
 ```bash
 npm install @kensio/github-issue-drafting
 ```
+
+Every skill is also published as a zip on each
+[release](https://github.com/KensioSoftware/kensio.ai/releases), for a machine with no npm reach.
+Unzip it into `.agents/skills/` and it is installed.
 
 ## What it does
 

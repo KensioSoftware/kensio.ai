@@ -3,16 +3,21 @@
   "version": "1.11.0",
   "description": "Data modelling for Amazon DynamoDB, starting from one table.",
   "keywords": [
+    "agent-skills",
     "aws",
     "claude",
     "claude-code",
     "claude-code-plugin",
+    "codex",
+    "copilot",
+    "cursor",
     "data-modelling",
     "dynamodb",
     "kensio",
     "nosql",
     "single-table",
-    "skill"
+    "skill",
+    "skill-md"
   ],
   "homepage": "https://kensio.ai",
   "license": "Apache-2.0",

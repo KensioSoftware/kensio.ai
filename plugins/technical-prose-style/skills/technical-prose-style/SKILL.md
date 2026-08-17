@@ -1,6 +1,9 @@
 ---
 name: technical-prose-style
 description: Write documentation, READMEs, code comments, commit messages, release notes and PR text as plain technical prose, by removing the constructions that make unedited LLM prose tiring to read. It targets significance tails, contrastive definition, negation framing, appositive tails, colon explainers and a vocabulary that keeps renaming the same thing. Ships a script that scores prose against Django, Go, Rust and Python documentation. Use when writing or editing docs, a README, a changelog, a blog post or any prose for human readers, when asked to improve, tighten or rewrite writing, when prose "sounds like AI" or "sounds like Claude", and when reviewing documentation in a pull request.
+license: Apache-2.0
+metadata:
+  version: "1.11.0"
 ---
 
 # Technical prose style
@@ -24,7 +27,7 @@ compared against 66,000 words of Django, Go, Rust and Python documentation, and 
 where the two differed by a factor of two or more were kept. The six that survived run between 2.3
 and 8.3 times the human rate. Everything else tested came in under 1.2 times. Thresholds are set so
 that no human document in the corpus fails and every LLM document does.
-[reference/measurements.md](reference/measurements.md) records the method, the thresholds, the
+[references/measurements.md](references/measurements.md) records the method, the thresholds, the
 candidates that were tested and dropped, and a dependency-parser study that falsified four more.
 
 Read [What to leave alone](#what-to-leave-alone) before rewriting anything. Several of the usual
@@ -299,8 +302,11 @@ run a second pass over what has just been written.
 2. Run the checker on the file:
 
 ```bash
-node skills/technical-prose-style/scripts/prose-check.mjs path/to/file.md
+node scripts/prose-check.mjs path/to/file.md
 ```
+
+That path is relative to this skill's own directory, wherever the skill was installed. Run it from
+there, or prefix it with the directory holding this `SKILL.md`.
 
 The checker strips code blocks, counts each pattern per 1000 words, compares against the exemplar
 baseline, and prints the worst sentence for every pattern over threshold. Pass a directory to score

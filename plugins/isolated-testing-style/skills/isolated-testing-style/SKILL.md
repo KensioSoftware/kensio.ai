@@ -1,6 +1,9 @@
 ---
 name: isolated-testing-style
 description: Write tests that start from given/when/then, use real collaborators through simulation rather than stubs and mocks, take their isolation from randomised data rather than shared setup and teardown, and assert behaviour rather than call counts. Use when writing or reviewing tests, when a test needs a collaborator faked, when reaching for a mock, spy, `toHaveBeenCalledWith`, `beforeEach`/`afterEach` fixtures or a hardcoded expected hash, when test setup has grown tangled, and when asked "how should I test this?".
+license: Apache-2.0
+metadata:
+  version: "1.11.0"
 ---
 
 # Isolated testing style

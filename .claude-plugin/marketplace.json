@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "kensio",
-  "description": "Claude Code skills from Kensio Software — reusable, opinionated ways of working, packaged as installable plugins.",
+  "description": "Agent skills from Kensio Software, packaged as installable plugins.",
   "owner": {
     "name": "Kensio Software",
     "email": "hugh@kensiosoftware.co.uk",
@@ -87,7 +87,7 @@
     },
     {
       "name": "skill-template",
-      "description": "A copy-and-edit starting point for a new Claude Code skill.",
+      "description": "A copy-and-edit starting point for a new agent skill.",
       "source": "./plugins/skill-template",
       "author": {
         "name": "Kensio Software",

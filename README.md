@@ -2,11 +2,13 @@
 
 [https://kensio.ai](https://kensio.ai "Kensio AI Skills & Tooling")
 
-Claude Code skills from [Kensio Software](https://kensiosoftware.co.uk). Reusable, opinionated ways
-of working, packaged as installable plugins.
+Agent skills from [Kensio Software](https://kensiosoftware.co.uk). Reusable, opinionated ways of
+working, written to the [Agent Skills specification](https://agentskills.io/specification) and
+installable into any agent that reads `SKILL.md`.
 
-This repository is the canonical source. Each skill is a self-contained plugin that can be installed
-from the Claude Code marketplace, from npm, or (later) as a downloadable archive.
+This repository is the canonical source. Each skill is a directory under
+`plugins/<name>/skills/<name>/`, and that directory is the whole artefact. The plugin folder around
+it, the npm package, the release zip and the installer are four ways of delivering the same files.
 
 The three testing skills are a set: `isolated-testing-style` is a way of writing tests, and
 `yulin-aws-simulation` and `part-factory-test-data` cover two Kensio packages that serve it.
@@ -17,19 +19,41 @@ own. `skill-template` is the starting point for writing a new skill.
 
 ## Install
 
-### From the marketplace (recommended)
+### Into any agent (recommended)
+
+```bash
+npx @kensio/skills add isolated-testing-style
+```
+
+That copies the skill directory into `.agents/skills/`, the cross-tool convention read by Codex CLI,
+Cursor, VS Code, Gemini CLI and the rest. `--agent claude` puts it in `.claude/skills/` and
+`--agent copilot` in `.github/skills/`. `--user` installs under your home directory for every
+project, `--all` takes every skill, and `list` prints what there is.
+
+The [installer](packages/skills-cli) carries the skills inside the package, so it needs the network
+only for the fetch.
+
+Where an agent looks for skills:
+
+| Agent               | In a project                                            | For every project                                              |
+| ------------------- | ------------------------------------------------------- | -------------------------------------------------------------- |
+| Codex CLI           | `.agents/skills/`                                       | `~/.agents/skills/`                                            |
+| VS Code and Copilot | `.github/skills/`, `.claude/skills/`, `.agents/skills/` | `~/.copilot/skills/`, `~/.claude/skills/`, `~/.agents/skills/` |
+| Claude Code         | `.claude/skills/`, or a plugin                          | `~/.claude/skills/`                                            |
+| Anything else       | `.agents/skills/`                                       | `~/.agents/skills/`                                            |
+
+Check your own agent's documentation for the last row. The specification defines the directory
+layout and leaves the search paths to each implementation, and `.agents/skills/` is where they have
+converged.
+
+### As a Claude Code plugin
 
 ```bash
 claude plugin marketplace add KensioSoftware/kensio.ai
-```
-
-Then install the skills you want:
-
-```bash
 claude plugin install isolated-testing-style@kensio
 ```
 
-The same commands work as slash commands inside a Claude Code session:
+The same commands work as slash commands inside a session:
 
 ```
 /plugin marketplace add KensioSoftware/kensio.ai
@@ -50,13 +74,19 @@ Every skill is also published as a scoped package, all sharing one version:
 npm install @kensio/isolated-testing-style
 ```
 
-The package contains the plugin folder as-is (`.claude-plugin/` plus `skills/`), so point Claude
-Code at it (or at `node_modules/@kensio/<skill-name>`) as a local plugin.
+The package contains the plugin folder as-is (`.claude-plugin/` plus `skills/`). Point Claude Code
+at it as a local plugin, or copy `node_modules/@kensio/<name>/skills/<name>` into your agent's
+skills directory.
 
 ### From an archive
 
-Zips of each plugin will be published on kensio.ai for machines that have neither git nor npm access
-(air-gapped hosts, CI images, locked-down client environments). Not available yet.
+Every [release](https://github.com/KensioSoftware/kensio.ai/releases) carries a zip per skill, plus
+one holding all of them, for machines with neither git nor npm reach (air-gapped hosts, CI images,
+locked-down client environments). Each zip holds the skill directory at its root:
+
+```bash
+unzip isolated-testing-style-1.11.0.zip -d .agents/skills/
+```
 
 ## Available skills
 
@@ -76,27 +106,35 @@ other two are tools that serve it.
 
 ## Repository layout
 
-A pnpm workspace monorepo. The `plugins/` directory serves double duty. It is both the workspace
-glob and the set of relative-path sources in the marketplace catalog.
+A pnpm workspace monorepo. The `plugins/` directory serves double duty. It is both a workspace glob
+and the set of relative-path sources in the marketplace catalog.
 
 ```
 kensio.ai/
 ├── .claude-plugin/
 │   └── marketplace.json          # the plugin catalog
 ├── plugins/
-│   └── <skill-name>/             # one folder per skill — also an npm package
+│   └── <skill-name>/             # one folder per skill, also an npm package
 │       ├── package.json          # @kensio/<skill-name>, version set by the release
 │       ├── .claude-plugin/
 │       │   └── plugin.json       # name, description, version, author
 │       └── skills/
-│           └── <skill-name>/
-│               └── SKILL.md
-├── scripts/                      # validation helpers
-└── pnpm-workspace.yaml           # packages: ["plugins/*"]
+│           └── <skill-name>/     # the skill itself, and the only portable part
+│               ├── SKILL.md      # frontmatter to the Agent Skills specification
+│               ├── references/   # optional, loaded on demand
+│               └── scripts/      # optional, anything the skill runs
+├── packages/
+│   └── skills-cli/               # @kensio/skills, the installer
+├── scripts/                      # validation, versioning and packaging helpers
+└── pnpm-workspace.yaml           # packages: ["plugins/*", "packages/*"]
 ```
 
 Each plugin folder must be **self-contained**, with no `../` references outside it. Plugins get
 copied, zipped, and installed standalone, so those paths would not resolve.
+
+The same holds one level further in, and more strictly. A skill directory is installed on its own,
+under a path this repository never sees, so every path a `SKILL.md` mentions has to be relative to
+that directory. `pnpm validate:skills` fails the build on any that reaches outside it.
 
 ## Adding a skill
 
@@ -114,21 +152,28 @@ pnpm check
 - `pnpm format` — formats JSON, Markdown and JavaScript with
   [oxfmt](https://oxc.rs/docs/guide/usage/formatter). `pnpm format:check` is the read-only version
   CI runs.
+- `pnpm validate:skills` — checks every skill against the
+  [Agent Skills specification](https://agentskills.io/specification). Frontmatter keys, the name
+  rules, the description ceiling, and that every path and link in the body resolves inside the skill
+  directory. Needs nothing installed.
 - `pnpm validate` — runs `claude plugin validate --strict` against the marketplace manifest and
   every plugin it lists. Requires the Claude Code CLI (`npm install -g @anthropic-ai/claude-code`),
   and no authentication needed.
-- `pnpm check:versions` — asserts that every `plugin.json` and `package.json` carries the same
-  version as the root `package.json`, that names match their folder, and that the marketplace
-  catalog and `plugins/` directory agree.
+- `pnpm check:versions` — asserts that every `plugin.json`, `package.json` and `SKILL.md` carries
+  the same version as the root `package.json`, that names match their folder, and that the
+  marketplace catalog and `plugins/` directory agree.
+- `pnpm bundle` — copies the skills into `@kensio/skills`, where the installer reads them. Generated
+  and gitignored, rebuilt on every pack and before every publish.
+- `pnpm zips` — builds the release archives into `dist/`, one per skill and one holding all of them.
 
 Formatter settings live in [`.oxfmtrc.json`](.oxfmtrc.json). Two of them are deliberate:
 `proseWrap: "always"` rewraps Markdown prose at `printWidth`, so paragraphs never need wrapping by
 hand, and `embeddedLanguageFormatting: "off"` leaves fenced code samples exactly as written, since
 those are hand-tuned illustrations and normalising them would spoil them.
 
-Both run in CI on every push and pull request
+All of them run in CI on every push and pull request
 ([`.github/workflows/validate.yml`](.github/workflows/validate.yml)), along with an
-`npm pack --dry-run` over each plugin directory.
+`npm pack --dry-run` over each package directory and a build of the release archives.
 
 ## Releasing
 
@@ -166,9 +211,14 @@ created with `GITHUB_TOKEN` does not trigger workflow runs), and it is merged wi
 
 ### One version, everywhere
 
-All fifteen manifests (the root `package.json`, and each plugin's `package.json` and `plugin.json`)
-carry the same number, written by [`set-version.mjs`](scripts/set-version.mjs). A version therefore
-means the same commit whether it came from the marketplace or from npm.
+Every manifest carries the same number, written by [`set-version.mjs`](scripts/set-version.mjs). The
+root `package.json`, each plugin's `package.json` and `plugin.json`, the installer's `package.json`,
+and the `metadata.version` in each `SKILL.md`. A version therefore means the same commit whether it
+came from the marketplace, from npm, from a zip, or out of `npx @kensio/skills`.
+
+The frontmatter is in that list because a skill directory travels alone. A copy sitting in someone's
+`.agents/skills/` has no package.json beside it, and the number in the frontmatter is then the only
+way to tell what it is.
 
 The trade-off is that a release republishes every plugin, so Claude Code offers an update for
 plugins that did not change. That is deliberate, because lockstep versions are much easier to reason
@@ -203,8 +253,13 @@ the first version of every package is published by hand.
 ```bash
 git checkout v<version>
 node scripts/set-version.mjs <version>
+node scripts/bundle-skills.mjs            # only for ./packages/skills-cli
 npm publish ./plugins/<name> --access public
 ```
+
+`@kensio/skills` is bootstrapped the same way, from `./packages/skills-cli`. Its `skills/` directory
+is generated, so the bundle step above has to run first or it publishes an installer with nothing in
+it.
 
 `set-version` is the step that is easy to miss. semantic-release tags the commit before it writes
 the version into the manifests. A clean checkout of the tag still carries the previous number, and
