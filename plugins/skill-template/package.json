@@ -1,13 +1,18 @@
 {
   "name": "@kensio/skill-template",
   "version": "1.11.0",
-  "description": "A copy-and-edit starting point for a new Claude Code skill.",
+  "description": "A copy-and-edit starting point for a new agent skill.",
   "keywords": [
+    "agent-skills",
     "claude",
     "claude-code",
     "claude-code-plugin",
+    "codex",
+    "copilot",
+    "cursor",
     "kensio",
-    "skill"
+    "skill",
+    "skill-md"
   ],
   "homepage": "https://kensio.ai",
   "license": "Apache-2.0",

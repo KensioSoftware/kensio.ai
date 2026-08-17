@@ -1,7 +1,7 @@
 # @kensio/dynamodb-single-table
 
-A Claude Code skill for modelling data in Amazon DynamoDB, where the default is one table per
-service holding every entity type.
+An agent skill for modelling data in Amazon DynamoDB, where the default is one table per service
+holding every entity type.
 
 Nearly all of the data modelling advice an LLM has read is about SQL, and it carries over badly. The
 result is a table per entity, a join in the application layer, and a `Scan` wherever the keys fall
@@ -20,23 +20,38 @@ and
 [best practices](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/best-practices.html)
 pages of the developer guide.
 
-The skill carries the links and tells Claude to fetch them when designing or reviewing a real
+The skill carries the links and tells the agent to fetch them when designing or reviewing a real
 schema. A summary goes stale, quotas move, and the worked examples hold detail no summary keeps.
 
 ## Install
 
-From the marketplace:
+Into any agent that reads `SKILL.md`:
+
+```bash
+npx @kensio/skills add dynamodb-single-table
+```
+
+That copies the skill directory into `.agents/skills/`, where Codex, Cursor, Copilot, Gemini CLI and
+the other implementations of the specification look for one. Pass `--agent claude` for
+`.claude/skills/`, `--agent copilot` for `.github/skills/`, and `--user` to install it for every
+project at once.
+
+Claude Code also takes it as a plugin:
 
 ```bash
 claude plugin marketplace add KensioSoftware/kensio.ai
 claude plugin install dynamodb-single-table@kensio
 ```
 
-From npm:
+Or pin it in a repository as a dependency:
 
 ```bash
 npm install @kensio/dynamodb-single-table
 ```
+
+Every skill is also published as a zip on each
+[release](https://github.com/KensioSoftware/kensio.ai/releases), for a machine with no npm reach.
+Unzip it into `.agents/skills/` and it is installed.
 
 ## What it covers
 

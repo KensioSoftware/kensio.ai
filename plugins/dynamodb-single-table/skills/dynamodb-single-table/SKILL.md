@@ -1,6 +1,9 @@
 ---
 name: dynamodb-single-table
 description: Model data in Amazon DynamoDB as one table by default, reading the current AWS guidance before committing to a schema, writing the access patterns down before any keys exist, holding every entity type in one table, overloading generic partition and sort keys across those types, overloading and sparsifying secondary indexes, and splitting items by write rate. Use when designing or reviewing a DynamoDB schema, when a CDK stack is about to gain a second table, when an entity needs a query it has no key for, when application code fetches from two tables to assemble one response, when a Scan or a filter expression appears, when a partition runs hot or a write throttles, and when asked how to model users, orders, events or tenants in DynamoDB.
+license: Apache-2.0
+metadata:
+  version: "1.11.0"
 ---
 
 # Single-table design in DynamoDB
@@ -40,7 +43,7 @@ The developer guide, starting with these four:
   an index whose sub-pages cover partition keys, sort keys, secondary indexes, large items, time
   series data, many-to-many relationships and querying.
 
-[reference/aws-guidance.md](reference/aws-guidance.md) collects the mechanics from those sub-pages
+[references/aws-guidance.md](references/aws-guidance.md) collects the mechanics from those sub-pages
 in one place, including throughput per partition, write sharding, index projections, sort key
 patterns and the read cost of a `Scan`. Read it when the question turns on performance or cost. The
 questions about shape are answered here.
@@ -141,8 +144,8 @@ Choosing the partition key is also a throughput decision. A key with many distin
 evenly (a customer id) distributes well, and one with few values (a status code) or one that
 concentrates writes on the current period (a date rounded to the day) does not. Every partition
 serves 3,000 read units and 1,000 write units per second.
-[reference/aws-guidance.md](reference/aws-guidance.md) covers the arithmetic, the AWS table of good
-and bad keys, and write sharding for the cases that need it.
+[references/aws-guidance.md](references/aws-guidance.md) covers the arithmetic, the AWS table of
+good and bad keys, and write sharding for the cases that need it.
 
 ## Overload the secondary indexes
 
@@ -174,7 +177,7 @@ carries its own capacity. The case for an LSI is a strongly consistent read on a
 key, which a GSI cannot give (GSI reads are eventually consistent, always).
 
 Decide the projection on every index. `ALL` removes fetches and roughly doubles storage and write
-cost. See [reference/aws-guidance.md](reference/aws-guidance.md) for the trade.
+cost. See [references/aws-guidance.md](references/aws-guidance.md) for the trade.
 
 ## Split items by write rate
 

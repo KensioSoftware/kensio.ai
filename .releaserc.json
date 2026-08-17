@@ -6,10 +6,20 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "node scripts/set-version.mjs ${nextRelease.version}",
+        "prepareCmd": "node scripts/set-version.mjs ${nextRelease.version} && node scripts/build-zips.mjs ${nextRelease.version}",
         "publishCmd": "node scripts/publish-npm.mjs ${nextRelease.version}"
       }
     ],
-    "@semantic-release/github"
+    [
+      "@semantic-release/github",
+      {
+        "assets": [
+          {
+            "path": "dist/*.zip",
+            "label": "Skill directories, for installing without git or npm"
+          }
+        ]
+      }
+    ]
   ]
 }

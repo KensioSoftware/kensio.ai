@@ -18,11 +18,15 @@ importers:
         specifier: ^25.0.9
         version: 25.0.9
 
+  packages/skills-cli: {}
+
   plugins/dynamodb-single-table: {}
 
   plugins/github-issue-drafting: {}
 
   plugins/isolated-testing-style: {}
+
+  plugins/pangram-check: {}
 
   plugins/part-factory-test-data: {}
 

@@ -1,24 +1,17 @@
 {
-  "name": "@kensio/technical-prose-style",
+  "name": "@kensio/skills",
   "version": "1.11.0",
-  "description": "A measured prose style for documentation, with a checker calibrated on human technical writing.",
+  "description": "Install Kensio agent skills into any agent that reads SKILL.md.",
   "keywords": [
     "agent-skills",
     "claude",
-    "claude-code",
-    "claude-code-plugin",
+    "cli",
     "codex",
     "copilot",
     "cursor",
-    "documentation",
     "kensio",
-    "markdown",
-    "prose",
     "skill",
-    "skill-md",
-    "style",
-    "technical-writing",
-    "writing"
+    "skill-md"
   ],
   "homepage": "https://kensio.ai",
   "license": "Apache-2.0",
@@ -26,14 +19,21 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/KensioSoftware/kensio.ai.git",
-    "directory": "plugins/technical-prose-style"
+    "directory": "packages/skills-cli"
+  },
+  "bin": {
+    "kensio-skills": "bin/kensio-skills.mjs"
   },
   "files": [
-    ".claude-plugin",
+    "bin",
     "skills",
     "README.md"
   ],
+  "type": "module",
   "publishConfig": {
     "access": "public"
+  },
+  "scripts": {
+    "prepack": "node ../../scripts/bundle-skills.mjs"
   }
 }

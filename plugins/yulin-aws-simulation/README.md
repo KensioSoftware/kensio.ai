@@ -1,25 +1,40 @@
 # @kensio/yulin-aws-simulation
 
-A Claude Code skill for testing AWS code with [Yulin](https://yulinsim.dev/) (`@kensio/yulin`), an
-AWS simulator that runs in process, in memory, with no network and no AWS account.
+An agent skill for testing AWS code with [Yulin](https://yulinsim.dev/) (`@kensio/yulin`), an AWS
+simulator that runs in process, in memory, with no network and no AWS account.
 
 Yulin's own docs are the authority on its API. This skill is the usage guidance missing from the
 API: what to reach for, what to avoid, and what to do when the simulator refuses something.
 
 ## Install
 
-From the marketplace:
+Into any agent that reads `SKILL.md`:
+
+```bash
+npx @kensio/skills add yulin-aws-simulation
+```
+
+That copies the skill directory into `.agents/skills/`, where Codex, Cursor, Copilot, Gemini CLI and
+the other implementations of the specification look for one. Pass `--agent claude` for
+`.claude/skills/`, `--agent copilot` for `.github/skills/`, and `--user` to install it for every
+project at once.
+
+Claude Code also takes it as a plugin:
 
 ```bash
 claude plugin marketplace add KensioSoftware/kensio.ai
 claude plugin install yulin-aws-simulation@kensio
 ```
 
-From npm:
+Or pin it in a repository as a dependency:
 
 ```bash
 npm install @kensio/yulin-aws-simulation
 ```
+
+Every skill is also published as a zip on each
+[release](https://github.com/KensioSoftware/kensio.ai/releases), for a machine with no npm reach.
+Unzip it into `.agents/skills/` and it is installed.
 
 ## What it covers
 

@@ -1,6 +1,6 @@
 # @kensio/part-factory-test-data
 
-A Claude Code skill for building test data with [Part Factory](https://partfactory.dev/)
+An agent skill for building test data with [Part Factory](https://partfactory.dev/)
 (`@kensio/part-factory`), a small typed object factory library.
 
 The package README is the authority on the API. This skill covers which factory to reach for, when a
@@ -8,18 +8,33 @@ mapped factory earns its place, and where factories should live.
 
 ## Install
 
-From the marketplace:
+Into any agent that reads `SKILL.md`:
+
+```bash
+npx @kensio/skills add part-factory-test-data
+```
+
+That copies the skill directory into `.agents/skills/`, where Codex, Cursor, Copilot, Gemini CLI and
+the other implementations of the specification look for one. Pass `--agent claude` for
+`.claude/skills/`, `--agent copilot` for `.github/skills/`, and `--user` to install it for every
+project at once.
+
+Claude Code also takes it as a plugin:
 
 ```bash
 claude plugin marketplace add KensioSoftware/kensio.ai
 claude plugin install part-factory-test-data@kensio
 ```
 
-From npm:
+Or pin it in a repository as a dependency:
 
 ```bash
 npm install @kensio/part-factory-test-data
 ```
+
+Every skill is also published as a zip on each
+[release](https://github.com/KensioSoftware/kensio.ai/releases), for a machine with no npm reach.
+Unzip it into `.agents/skills/` and it is installed.
 
 ## What it covers
 
