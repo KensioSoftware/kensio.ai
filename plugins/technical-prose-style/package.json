@@ -1,6 +1,6 @@
 {
   "name": "@kensio/technical-prose-style",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "description": "A measured prose style for documentation, with a checker calibrated on human technical writing.",
   "keywords": [
     "claude",
