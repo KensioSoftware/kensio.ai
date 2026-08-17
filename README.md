@@ -120,7 +120,7 @@ pnpm check
 Formatter settings live in [`.oxfmtrc.json`](.oxfmtrc.json). Two of them are deliberate:
 `proseWrap: "always"` rewraps Markdown prose at `printWidth`, so paragraphs never need wrapping by
 hand, and `embeddedLanguageFormatting: "off"` leaves fenced code samples exactly as written, since
-those are hand-tuned illustrations, not code to be normalised.
+those are hand-tuned illustrations and normalising them would spoil them.
 
 Both run in CI on every push and pull request
 ([`.github/workflows/validate.yml`](.github/workflows/validate.yml)), along with an

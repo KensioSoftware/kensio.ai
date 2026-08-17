@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-// Scores markdown prose against the five sentence shapes that separate LLM-written
-// technical documentation from human-written technical documentation.
+// Scores markdown prose against the sentence shapes that separate LLM-written technical
+// documentation from human-written technical documentation, plus three banned marks, a
+// lexical-spread measure and a check on heading framing.
 //
 // Baselines are the rate in 66,000 words of human technical documentation (Django, Effective
 // Go, the Rust Book, the Python docs). Warn is the 90th percentile of those files. Fail is the
@@ -35,6 +36,19 @@ const PATTERNS = [
     warn: 2.3,
     fail: 4.0,
     hint: "Say what the thing does. Contrast only to correct a belief the reader is likely to hold.",
+  },
+  {
+    name: "contrastive-coda",
+    // The same construction as contrastive-def, wearing a comma. Separates the
+    // corpora at 8.3x, and went undetected for four releases because the
+    // contrastive-def regex only looks for the two-word forms. The exclusions are
+    // correlatives and adverbs that open an ordinary clause instead of a
+    // corrective coda. "not only X but Y", "no matter how", "not yet available".
+    re: /,\s+not\s+(?!only|just|merely|because|that|to|if|when|matter|longer|yet|so|such|more|less|fewer|doubt)[a-z'"`][^.!?;:]*[.!?]/gi,
+    baseline: 0.3,
+    warn: 0.85,
+    fail: 1.6,
+    hint: "Delete the coda, or make the correction the whole sentence. Contrast only to fix a wrong belief.",
   },
   {
     name: "negation-frame",
@@ -72,8 +86,8 @@ const PATTERNS = [
     unit: "distinct/100",
     baseline: 0.628,
     warn: 0.655,
-    // Advisory, never a failure. Two reasons. It describes a whole document rather
-    // than a defect at a point, so there is no line to go and fix. And it is trivially
+    // Advisory, never a failure. Two reasons. It scores a whole document and points
+    // at no line to go and fix. And it is trivially
     // gameable by padding with repeated words, which would make the prose worse while
     // moving the number the right way.
     advisory: true,
@@ -103,6 +117,17 @@ const PATTERNS = [
     baseline: 2.05,
     ban: true,
     hint: "Start a new sentence. House rule, no mid-sentence colons in prose.",
+  },
+  // Headings are stripped from the prose, so until now nothing scored them. Framing
+  // a heading by what a section excludes runs at 6.3% of 128 LLM headings against
+  // 0.5% of 437 human ones. Two of the human hits are Django headings documenting a
+  // genuine prohibition, so this reports every occurrence and never fails a file.
+  {
+    name: "heading-frame",
+    scope: "headings",
+    re: /\b(?:is not|are not|does not|do not|nothing|neither|not)\b/i,
+    advisory: true,
+    hint: "Name what the section covers. A negative heading makes the reader invert it to find out.",
   },
 ];
 
@@ -185,14 +210,43 @@ function sentences(prose) {
     .filter((s) => s.length > 15);
 }
 
+/**
+ * Heading text, with the markup taken off. Code fences go first, so a `# comment`
+ * inside a shell block is not mistaken for a heading.
+ */
+function headings(markdown) {
+  const body = markdown
+    .replace(/^---\n[\s\S]*?\n---\n/, "")
+    .replace(/^(?: {0,3})(```|~~~)[\s\S]*?^(?: {0,3})\1[^\n]*$/gm, "");
+  return [...body.matchAll(/^\s{0,3}#{1,6}\s+(.+?)\s*#*\s*$/gm)].map((m) =>
+    m[1]
+      .replace(/`([^`]*)`/g, "$1")
+      .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+      .replace(/\*+/g, "")
+      .trim(),
+  );
+}
+
 function scoreFile(path) {
   const markdown = readFileSync(path, "utf8");
   const prose = toProse(markdown);
   const measurable = toProse(markdown, { keepCode: true });
   const words = prose ? prose.split(" ").length : 0;
   const sents = sentences(prose);
+  const heads = headings(markdown);
 
   const results = active.map((pattern) => {
+    if (pattern.scope === "headings") {
+      const hit = heads.filter((h) => pattern.re.test(h));
+      return {
+        pattern,
+        count: hit.length,
+        rate: hit.length,
+        status: hit.length > 0 ? "warn" : "ok",
+        worst: hit,
+      };
+    }
+
     if (pattern.measure) {
       const value = pattern.measure(measurable);
       let status = "ok";
@@ -288,19 +342,28 @@ if (json) {
     console.log(`\n${label}  ${report.words} words, ${report.sentences} sentences`);
     for (const { pattern, count, rate, status, worst } of flagged) {
       const colour = status === "FAIL" ? "\x1b[31m" : "\x1b[33m";
-      console.log(
-        `  ${colour}${status.padEnd(4)}\x1b[0m ${pattern.name.padEnd(18)} ` +
-          (pattern.measure
-            ? `${rate.toFixed(3).padStart(5)} ${pattern.unit}  (baseline ${pattern.baseline}, `
-            : `${rate.toFixed(2).padStart(5)} /1k  (${count}, baseline ${pattern.baseline}, `) +
-          (pattern.ban
-            ? "banned)"
-            : pattern.advisory
-              ? `warn ${pattern.warn}, advisory)`
-              : `warn ${pattern.warn}, fail ${pattern.fail})`),
-      );
+      if (pattern.scope === "headings") {
+        console.log(
+          `  ${colour}${status.padEnd(4)}\x1b[0m ${pattern.name.padEnd(18)} ` +
+            `${String(count).padStart(5)} heading(s)  (advisory)`,
+        );
+      } else {
+        console.log(
+          `  ${colour}${status.padEnd(4)}\x1b[0m ${pattern.name.padEnd(18)} ` +
+            (pattern.measure
+              ? `${rate.toFixed(3).padStart(5)} ${pattern.unit}  (baseline ${pattern.baseline}, `
+              : `${rate.toFixed(2).padStart(5)} /1k  (${count}, baseline ${pattern.baseline}, `) +
+            (pattern.ban
+              ? "banned)"
+              : pattern.advisory
+                ? `warn ${pattern.warn}, advisory)`
+                : `warn ${pattern.warn}, fail ${pattern.fail})`),
+        );
+      }
       console.log(`       ${pattern.hint}`);
-      for (const sentence of worst.slice(0, maxExamples)) {
+      // Headings are the finding, so show all of them. Prose examples are samples.
+      const shownWorst = pattern.scope === "headings" ? worst : worst.slice(0, maxExamples);
+      for (const sentence of shownWorst) {
         const shown = sentence.length > 170 ? `${sentence.slice(0, 167)}...` : sentence;
         console.log(`       \x1b[2m↳ ${shown}\x1b[0m`);
       }

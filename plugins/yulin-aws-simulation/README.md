@@ -38,10 +38,10 @@ ambiguous with the suffix Secrets Manager appends to an ARN and advised against 
 already reached production. It caught a wrongly computed Cognito `SECRET_HASH` the stub had happily
 accepted.
 
-**Match service errors by `name`, not `instanceof`.** The SDK exports its exception classes, which
-invites the wrong check. `instanceof` holds only while exactly one copy of the SDK is in play. It
-passes in production and fails against the simulator. `name` is what the wire carries, and is the
-check that is right in both places.
+**Match service errors by `name`.** The SDK exports its exception classes, which invites the wrong
+check. `instanceof` holds only while exactly one copy of the SDK is in play. It passes in production
+and fails against the simulator. `name` is what the wire carries, and is the check that is right in
+both places.
 
 **Expect refusals, and treat them as a feature.** Yulin refuses a property it cannot simulate, and
 never quietly ignores one, because silently accepting something that changes real behaviour is

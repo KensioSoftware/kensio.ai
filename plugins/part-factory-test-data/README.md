@@ -33,10 +33,10 @@ to override.
 an encoded form body, or front matter parts to a file as written on disk. If the map is copying
 fields across into an object of the same shape, you wanted a `DynamicFactory`.
 
-**Do not wrap a factory in a function that applies overrides.** `make(overrides)` already is that
-function, and it does the job better, since its overrides are partial all the way down the nested
-structure where a spread replaces a nested object whole. A wrapper doing more than passing overrides
-through is a signal that the factory is the wrong shape, or that the output type is fighting you.
+**Call the factory directly.** `make(overrides)` already is that function, and it does the job
+better, since its overrides are partial all the way down the nested structure where a spread
+replaces a nested object whole. A wrapper doing more than passing overrides through is a signal that
+the factory is the wrong shape, or that the output type is fighting you.
 
 **Factories belong beside the type they construct.** A library defining an event or message shape
 should export a factory for it, so consumers never hand-roll the literal. The example the skill

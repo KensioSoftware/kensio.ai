@@ -6,7 +6,7 @@ description: Write tests that start from given/when/then, use real collaborators
 # Isolated testing style
 
 An opinionated way of writing tests. The examples are TypeScript and vitest, but the rules are about
-test design, not about any framework. Each rule exists because of a specific failure it would have
+test design and hold for any framework. Each rule exists because of a specific failure it would have
 caught.
 
 ## Start with Given, When, Then
@@ -28,14 +28,14 @@ what should result. That is a smaller question than "how do I test this?", and y
 answer it before you can answer the bigger one.
 
 **It designs the interface.** Filling in `// When` forces you to name the single action under test,
-in the caller's vocabulary, not the implementation's. A step you cannot write as one `// When` is
-usually telling you the interface is wrong, not the test.
+in the caller's vocabulary. A step you cannot write as one `// When` usually means the interface is
+wrong.
 
 **It keeps the test readable as documentation.** Tests are read far more often than they are
 written, and without the structure it is easy to produce a body where essential behaviour and
 incidental setup look alike.
 
-Then fill each comment in with the case, not with a restatement of the code:
+Then fill each comment in with the case it covers, and never with a restatement of the code:
 
 ```typescript
 it("refuses an order once the offer has closed", async () => {
@@ -96,11 +96,11 @@ quirk to work around.
 
 ## Keep setup cheap and independent
 
-Tangled shared fixtures come from economics, not from indiscipline. Teams share setup roughly in
-proportion to how expensive it is to build. When getting a test into the right state means threading
-through a web of existing fixtures, reusing what is already there is the rational move, and each
-reuse adds another edge to the graph. That is how a suite arrives at setup that no one dares to
-touch.
+Tangled shared fixtures come from economics. Discipline has little to do with it. Teams share setup
+roughly in proportion to how expensive it is to build. When getting a test into the right state
+means threading through a web of existing fixtures, reusing what is already there is the rational
+move, and each reuse adds another edge to the graph. That is how a suite arrives at setup that no
+one dares to touch.
 
 The fix is to share differently. Shared factories for test entities are exactly what you want. A
 factory that constructs a type is worth writing once and using everywhere. What has to be avoided is
@@ -109,7 +109,7 @@ those factories getting tangled up with each other. Each piece of setup should s
 Independence comes from taking dependencies explicitly rather than reaching for ambient state. A
 factory that is handed what it needs stays pure, and the test decides what to hand it.
 `@kensio/part-factory` builds this in. Factories take a `dependencies` object as a second argument
-at call time. A factory that needs a simulated AWS is given one rather than going looking for one.
+at call time. A factory that needs a simulated AWS is handed one, and never goes looking.
 
 ```typescript
 // Given an order that exists in this test's own simulated AWS.
@@ -121,12 +121,12 @@ A factory built that way can be shared as widely as you like and still stand on 
 everything it does is independent of what another factory did first. Prefer collaborators and
 factories that need only instantiation, with no side effects, no cleanup and no coordination.
 
-For a step specific to one test rather than a reusable factory, ask whether the step belongs to the
-test or the test belongs to the step. A helper confined to one file can be pulled back inline later
-if it stops earning its place, whereas a fixture that a large part of the suite is built on cannot.
-It is that reversibility worth preserving, not locality for its own sake.
+For a step specific to one test, ask whether the step belongs to the test or the test belongs to the
+step. A helper confined to one file can be pulled back inline later if it stops earning its place,
+whereas a fixture that a large part of the suite is built on cannot. Reversibility is the thing to
+preserve, and locality on its own earns little.
 
-## Get isolation from the data, not from setup and teardown
+## Take isolation from randomised data
 
 Randomised values make collisions impossible. No teardown is required, and there is no ordering to
 depend on. Randomised is enough. Guaranteed uniqueness is unnecessary, and a UUID has no realistic
@@ -174,7 +174,7 @@ Faker is the source of these values. Prefer a generator that produces a realisti
 kind (`faker.internet.email()`, `faker.string.uuid()`, `faker.company.name()`) over a counter or a
 literal with a suffix. The test data also exercises the shapes production data has.
 
-## Assert behaviour, not call counts
+## Assert observable behaviour
 
 A call count asserts how the code is written today. A behaviour assertion holds however it is
 written, which is what lets you refactor.
@@ -228,9 +228,9 @@ Two ways out, in order of preference:
    published test vector, or a value produced by a different implementation.
 
 The same rule covers snapshot tests of anything the code under test formats. A snapshot records what
-the code does, not what it should do.
+the code does, and stays silent on what it should do.
 
-## Nothing at the top level but imports
+## Keep the top level to imports
 
 In an ideal vitest or jest file, the only things outside the top-level `describe()` are the imports.
 State, construction and helpers all live inside it. The file reads as a description of behaviour and
@@ -248,14 +248,14 @@ describe("placing an order", () => {
 });
 ```
 
-This is mostly a consequence of the other rules, not an extra one. What usually accumulates at the
-top level of a test file is module-level state the tests share, a mutable handle that exists so
-`afterEach` can reach it, and hoisted mock registrations. The rules above have already turned down
-all three. So a top level that will not stay empty is a useful signal that something further up has
-slipped. Imported factories are fine here. They arrive as imports precisely because they stand on
-their own.
+This is mostly a consequence of the other rules and adds little on its own. What usually accumulates
+at the top level of a test file is module-level state the tests share, a mutable handle that exists
+so `afterEach` can reach it, and hoisted mock registrations. The rules above have already turned
+down all three. So a top level that will not stay empty is a useful signal that something further up
+has slipped. Imported factories are fine here. They arrive as imports precisely because they stand
+on their own.
 
-## Put test support beside the code, not in the test file
+## Put test support beside the code
 
 A test file should hold tests. Where support lives depends on what it is for.
 
@@ -275,8 +275,9 @@ A step written for **one test** stays in that test's file, inside the `describe`
 when another test wants it is fine. Make it independent first, so what spreads is a self-contained
 factory (not a dependency on how some other test left things).
 
-If a test file is mostly setup, that is a signal. The fix is usually cheaper construction, not a
-shared fixture. Scroll the file and see how much of it is `it(...)` bodies making assertions.
+If a test file is mostly setup, that is a signal. The fix is usually cheaper construction. A shared
+fixture treats the symptom. Scroll the file and see how much of it is `it(...)` bodies making
+assertions.
 
 ## Tools that help
 
