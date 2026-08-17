@@ -1,0 +1,33 @@
+{
+  "name": "@kensio/pangram-check",
+  "version": "1.11.0",
+  "description": "Check finished writing against the Pangram AI-text detector.",
+  "keywords": [
+    "ai-detection",
+    "claude",
+    "claude-code",
+    "claude-code-plugin",
+    "kensio",
+    "markdown",
+    "pangram",
+    "prose",
+    "skill",
+    "writing"
+  ],
+  "homepage": "https://kensio.ai",
+  "license": "Apache-2.0",
+  "author": "Kensio Software <hugh@kensiosoftware.co.uk>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KensioSoftware/kensio.ai.git",
+    "directory": "plugins/pangram-check"
+  },
+  "files": [
+    ".claude-plugin",
+    "skills",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
