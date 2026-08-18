@@ -3,7 +3,7 @@ name: skill-template
 description: Scaffold a new agent skill, writing the SKILL.md and its frontmatter to the Agent Skills specification, then wrapping it as a plugin in this repo with package.json, plugin.json and a marketplace entry. Use when the user asks to "add a new skill", "create a skill", "write a SKILL.md" or "start a new plugin", and when checking whether an existing skill is portable between agents.
 license: Apache-2.0
 metadata:
-  version: "1.13.1"
+  version: "1.14.0"
 ---
 
 # Skill template
