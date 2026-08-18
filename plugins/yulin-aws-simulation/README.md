@@ -76,8 +76,10 @@ deployed in `beforeAll` is already isolated between files. Isolation inside the 
 randomised names.
 
 **Run the handler as a real simulated Lambda.** Bind an in-process handler to a template function
-and its SDK calls are routed into the simulation as the execution role. A missing permission on that
-role fails the test at the point AWS would have failed it.
+and invoke the function through simulated Lambda. Its SDK calls are then routed into the simulation
+as the execution role, and a missing permission on that role fails the test at the point AWS would
+have failed it. Calling the bound handler directly skips all of that, and so does reading
+`process.env` at module scope.
 
 ## Related skills
 

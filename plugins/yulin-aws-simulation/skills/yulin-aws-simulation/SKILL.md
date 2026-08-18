@@ -12,9 +12,11 @@ metadata:
 network and no AWS account. Its own docs are the authority on the API. This skill covers how to use
 it well, and that lives mostly outside the API.
 
-Read the package docs for anything API-shaped. Start with
-[the README](https://github.com/KensioSoftware/yulin#readme), then `docs/sdk/` for interception and
-`docs/services/<name>/` for each simulated service.
+Read the package docs for anything API-shaped.
+[yulinsim.dev/llms.txt](https://yulinsim.dev/llms.txt) indexes every page as plain markdown, one
+link per guide and one per simulated service. Drop the `llms.txt` from a link for the HTML page. The
+same pages ship in the repository, as [the README](https://github.com/KensioSoftware/yulin#readme),
+then `docs/sdk/` for interception and `docs/services/<name>/` for each simulated service.
 
 This skill serves the `isolated-testing-style` skill, the general argument for simulation over
 stubs.
@@ -84,8 +86,7 @@ The two options that make a wrapper unnecessary:
 
 - **`transform`** is given the parsed template and answers with the one to deploy. It runs on the
   deployment and again on every re-read. A wrapper cannot do that. Use it for what a simulation
-  genuinely cannot resolve, such as an ARN carrying a real account, or a hosted zone ID that came
-  from `HostedZone.fromLookup`.
+  genuinely cannot resolve, such as an ARN carrying a real account.
 - **`watch`** re-applies the file when it changes, updating the stack in place. This is for dev
   servers. A `cdk synth` becomes a stack update without restarting the process, and resources the
   change left alone keep what they hold.
@@ -93,10 +94,22 @@ The two options that make a wrapper unnecessary:
 ```typescript
 await simAws.cloudFormation().deployTemplateFile({
   templatePath: "cdk.out/SiteStack.template.json",
-  transform: withoutLookedUpHostedZone,
+  transform: withRealAccountArnsResolved,
   watch: { onUpdated: () => srv.reload() },
 });
 ```
+
+A hosted zone ID that came from `HostedZone.fromLookup` needs no transform of its own. An
+`AWS::Route53::RecordSet` naming a hosted zone ID that no zone holds gets one registered under that
+ID as the record is created, and its records resolve. The zone takes its name from the records that
+name it. Register it yourself with `simAws.route53().registerHostedZone({ id, name })` where a test
+depends on the name, such as one listing zones by name.
+
+A failed `cdk synth` leaves the previous template in `cdk.out` where it was, and the tests carry on
+running against it. An edit that leaves an unused variable behind fails `tsc` and exits non-zero,
+with the error hidden behind a redirect. The test that runs next passes against the template from
+before the change. Check that the synthesized JSON changed before concluding anything from a
+construct change.
 
 ## Intercept real SDK clients, never hand-roll stubs
 
@@ -270,6 +283,11 @@ control also needs `lambda:InvokeFunction`. The tests passed, the release went o
 Report a false pass with what production does and what the simulation did. Report a false refusal
 with the property and the template that carries it.
 
+A workaround kept while the issue is open wants a comment naming that issue, and a revisit when it
+closes. One test file carried a comment saying its handler could not reach simulated AWS from inside
+a simulated Lambda, citing KensioSoftware/yulin#638. That held when it was written and was fixed in
+1.16.0. The comment went on shaping the design of the test for months after that.
+
 ## Deploy expensive context once per test file
 
 Vitest gives each test file its own worker, so module-level state is already isolated between files.
@@ -322,3 +340,74 @@ The handler still runs in process. It can close over test state and be stepped t
 debugger. The difference from calling it directly is that a missing `s3:PutObject` on the execution
 role now fails the test, at the point AWS would have failed it. A binding can target a function by
 `logicalId`, `functionName`, `arn`, `cdkPath`, or `imageRepository` for a container image function.
+
+### Invoke through simulated Lambda
+
+Binding a handler proves nothing about IAM on its own. The execution role, the function's
+environment and its outbound HTTP are all applied by the invocation. The test has to go through
+`simAws.lambda().invoke(new InvokeCommand({ FunctionName, Payload }))` to get any of them. A test
+holding the same handler reference and calling it directly runs it in the test's own scope, as the
+test's own caller, with none of the three.
+
+The difference shows up under mutation. Removing `dynamodb:GetItem` from the role's policy in the
+CDK stack and re-synthesizing failed every invoked case:
+
+```
+AccessDenied: User: arn:aws:iam::111111111111:role/UserFunctionServiceRole1B2C3D4E
+is not authorized to perform: dynamodb:GetItem
+```
+
+The cases calling the handler directly passed. A suite that stays green through that mutation was
+never covering the policy.
+
+### Read the environment inside the handler
+
+A bound handler gets the function's declared environment variables with nothing stubbed.
+`SimProcessEnvironment` holds a run's variables in an `AsyncLocalStorage` store and resolves
+`process.env` to that store for the length of the run. Concurrent runs each see their own. Its own
+doc comment states the one limit:
+
+<!-- prose-check:off -->
+
+> The one thing this cannot reach is a read that already happened. A handler module doing
+> `const TABLE = process.env.TABLE_NAME` at module scope is evaluated when the test file imports it,
+> long before any run, so it captures the host value.
+
+<!-- prose-check:on -->
+
+So read the environment inside the handler body. Memoise there where a warm container should build
+its clients once. The substituted `Date` a bound handler reads works the same way, and a time
+captured at module scope is captured equally early.
+
+Yulin ships `SimLambdaEnvironmentConflicts` to warn about this, and it warns only where the host
+value and the declared value differ. A suite that stubs the right values stays quiet and never
+learns. The rule stays invisible for as long as the stubs agree.
+
+A `vi.stubEnv` around a bound handler is the sign that the handler reads too early. Moving the reads
+into the handler body removed every `vi.stubEnv` from one repository.
+
+### What a binding buys, and what the zip path buys
+
+Deploying without `bindings` runs the bundle `cdk synth` produced. `deployTemplateFile` publishes
+the cloud assembly's assets into the staging bucket in simulated S3, and the function's modules are
+evaluated as CommonJS in a vm sandbox. That sandbox hands the code its own `process.env`, its own
+`Date` and its own HTTP clients, and the module-scope problem above never arises there.
+
+Both paths authorise through the execution role. The same policy mutation fails a zip-path test
+exactly as it fails a bound one. The choice between them is about what else the test needs:
+
+- **A binding** keeps a breakpoint working and lets the handler close over test state.
+- **The zip path** exercises the artefact that deploys, its imports and its bundling included.
+
+### Outbound HTTP is answered by the simulation
+
+From 1.16.2, a simulated Lambda's `fetch` and its `node:http` and `node:https` are answered by the
+simulation for every hostname simulated Route 53 resolves. Those requests go through the same
+in-process entry point one arriving on localhost uses. A Cognito user pool domain, an HTTP API and a
+load balancer are all answered without the test knowing which of them it asked. Everything else
+reaches the network as it was addressed.
+
+This is what makes an OAuth authorization code exchange testable. That exchange lives only at the
+hosted `/oauth2/token` endpoint of the user pool domain and has no SDK operation behind it. A
+handler that cannot reach the domain leaves the whole exchange uncovered. The same routing lets
+`CognitoJwtVerifier` fetch a simulated pool's JWKS from inside a handler with no cache primed.
