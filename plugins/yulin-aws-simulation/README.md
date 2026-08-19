@@ -43,7 +43,14 @@ Unzip it into `.agents/skills/` and it is installed.
 the test. Do not hand-roll a wrapper that reads the file and calls `deployTemplate`: the file path
 is how Yulin finds the cloud assembly beside it. A wrapper loses staged CDK assets. `transform`
 handles what a simulation cannot resolve, such as an ARN carrying a real account or a hosted zone ID
-from a CDK lookup, and `watch` re-applies the file on change for dev servers.
+from a CDK lookup, and `watch` re-applies the file on change for dev servers. `deployCdkOut` deploys
+a whole cloud assembly, each Stack into the region its own environment names.
+
+**Wire the object graph once, in production.** A test that builds the application's own object graph
+a second time is the shape to watch for. Ask what it cannot get through an invocation, and expect
+the answer to be nothing. Bindings and `invoke` give the execution role, the environment and the
+outbound HTTP, the production reader gives the state, and a bound handler's output is recorded into
+its log group.
 
 **Intercept real SDK clients with `SimSdk`, never hand-roll stubs.**
 `simSdk.intercept(SecretsManagerClient)` makes real clients answer from the simulation, and the code
