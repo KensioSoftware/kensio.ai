@@ -46,6 +46,13 @@ handles what a simulation cannot resolve, such as an ARN carrying a real account
 from a CDK lookup, and `watch` re-applies the file on change for dev servers. `deployCdkOut` deploys
 a whole cloud assembly, each Stack into the region its own environment names.
 
+**Register what the app looks up, deploy what the app creates.** `registerHostedZone`,
+`registerCertificate` and `registerUserPool` stand a resource up at an id a CDK app pins as a
+literal string across stacks. That suits a resource the app only looks up, such as a zone behind
+`HostedZone.fromLookup`. One that a stack in the same app creates wants deploying, because a
+registration means configuring it by hand and taking its configuration from somewhere other than the
+deployed template.
+
 **Wire the object graph once, in production.** A test that builds the application's own object graph
 a second time is the shape to watch for. Ask what it cannot get through an invocation, and expect
 the answer to be nothing. Bindings and `invoke` give the execution role, the environment and the
