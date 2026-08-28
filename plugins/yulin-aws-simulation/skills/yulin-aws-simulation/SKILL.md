@@ -9,11 +9,17 @@ metadata:
 # Testing with Yulin
 
 [Yulin](https://yulinsim.dev/) (`@kensio/yulin`) simulates AWS in process, in memory, with no
-network and no AWS account. This skill is how to use it well. For the API read
-[yulinsim.dev/llms.txt](https://yulinsim.dev/llms.txt), one markdown page per guide and per
-simulated service (drop the `llms.txt` for HTML, or read `docs/` in the repository). It serves
-`isolated-testing-style`, the general argument for simulation over stubs. Each rule says what it
-buys, and a case that does not want that trade can go the other way knowingly.
+network and no AWS account. This skill is how to use it well. It serves `isolated-testing-style`,
+the general argument for simulation over stubs. Each rule says what it buys, and a case that does
+not want that trade can go the other way knowingly.
+
+For the API read `node_modules/@kensio/yulin/llms.txt`. It indexes the 45 markdown pages beside it
+under `node_modules/@kensio/yulin/docs/`, one per simulated service and per feature guide,
+documenting the version installed. Open the page it names for the service in hand and grep it for
+the operation or property, since Cognito runs to 210 KB with DynamoDB and Lambda close behind. Where
+the package is absent, or predates the 1.20.x that started carrying it,
+[yulinsim.dev/llms.txt](https://yulinsim.dev/llms.txt) has the same index for the current release
+(drop the `llms.txt` for HTML).
 
 ## Use what Yulin already gives you
 
