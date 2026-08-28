@@ -67,6 +67,12 @@ ambiguous with the suffix Secrets Manager appends to an ARN and advised against 
 already reached production. It caught a wrongly computed Cognito `SECRET_HASH` the stub had happily
 accepted.
 
+**Drive requests into the simulation with `SimAwsHttp`.** Reading state back covers the resources.
+`http.fetch("https://www.example.test/docs/x")` covers the path through them, with nothing listening
+and no port to add. One request resolves the hostname through simulated Route 53, finds the
+Distribution its alias records point at, and runs the deployed CloudFront Function at
+viewer-request. A template assertion over the same stack passes with every Route 53 record missing.
+
 **Match service errors by `name`.** The SDK exports its exception classes, which invites the wrong
 check. `instanceof` holds only while exactly one copy of the SDK is in play. It passes in production
 and fails against the simulator. `name` is what the wire carries, and is the check that is right in
