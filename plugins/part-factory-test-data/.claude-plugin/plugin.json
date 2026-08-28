@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "part-factory-test-data",
-  "version": "1.15.0",
+  "version": "1.16.0",
   "description": "How to build typed test data with @kensio/part-factory factories.",
   "author": {
     "name": "Kensio Software",

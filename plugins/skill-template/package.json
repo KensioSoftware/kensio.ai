@@ -1,6 +1,6 @@
 {
   "name": "@kensio/skill-template",
-  "version": "1.15.0",
+  "version": "1.16.0",
   "description": "A copy-and-edit starting point for a new agent skill.",
   "keywords": [
     "agent-skills",

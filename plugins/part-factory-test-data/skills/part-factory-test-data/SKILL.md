@@ -3,7 +3,7 @@ name: part-factory-test-data
 description: Build test data with @kensio/part-factory, keeping in the factory everything a test does not care about, passing dependencies at call time so factories stay independent, and choosing between StaticFactory, DynamicFactory, VariantFactory, MappedFactory and AsyncMappedFactory. Use when writing test fixtures or builders, when a test file is full of object literals, when a shared event, message or payload shape is being hand-written, when a required field is about to be made optional to ease test setup, and when tempted to wrap a factory in a helper function that applies overrides.
 license: Apache-2.0
 metadata:
-  version: "1.15.0"
+  version: "1.16.0"
 ---
 
 # Building test data with Part Factory

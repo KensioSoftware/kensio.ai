@@ -1,6 +1,6 @@
 {
   "name": "kensio.ai",
-  "version": "1.15.0",
+  "version": "1.16.0",
   "private": true,
   "description": "Agent skills from Kensio Software, distributed as zips, npm packages and a Claude Code plugin marketplace.",
   "homepage": "https://kensio.ai",
