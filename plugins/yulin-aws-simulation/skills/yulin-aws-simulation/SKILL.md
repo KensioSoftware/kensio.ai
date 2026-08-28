@@ -1,6 +1,6 @@
 ---
 name: yulin-aws-simulation
-description: Use the @kensio/yulin in-process AWS simulator well when testing AWS code, using it directly rather than building a harness around it, driving tests, local dev and production from one synthesized CDK template, deploying a whole cdk.out cloud assembly, intercepting SDK clients with SimSdk, controlling simulated time, matching service errors by name, and handling properties Yulin refuses to simulate. Use when writing or reviewing tests that touch AWS, when replacing aws-sdk-client-mock or hand-rolled AWS stubs, when a CDK stack needs testing, when test setup around Yulin is growing helper classes or wrapper functions, and when Yulin refuses a template property or an SDK command.
+description: Use the @kensio/yulin in-process AWS simulator well when testing AWS code, using it directly rather than building a harness around it, driving tests, local dev and production from one synthesized CDK template, deploying a whole cdk.out cloud assembly, intercepting SDK clients with SimSdk, driving HTTP requests into the simulation with SimAwsHttp, controlling simulated time, matching service errors by name, and handling properties Yulin refuses to simulate. Use when writing or reviewing tests that touch AWS, when replacing aws-sdk-client-mock or hand-rolled AWS stubs, when a CDK stack needs testing, when a CloudFront Distribution, its DNS records or its certificate need testing, when test setup around Yulin is growing helper classes or wrapper functions, and when Yulin refuses a template property or an SDK command.
 license: Apache-2.0
 metadata:
   version: "1.14.0"
@@ -212,6 +212,33 @@ and `simAws.region(name).account()` carrying all of them (`logs()` among the one
 scope has), so look on the other scope before concluding a service is missing. Each also takes a
 plain `{ input: { ... } }` in place of a Command object. An assertion can therefore read a service
 back without adding an `@aws-sdk/client-*` package the production code has no use for.
+
+## Drive requests into the simulation
+
+Reading state back covers the resources. `SimAwsHttp` from `@kensio/yulin/serve` covers the path
+through them, by sending a request into the environment with nothing listening. It takes what the
+global `fetch` takes and answers with a `Response`:
+
+```typescript
+const http = new SimAwsHttp({ simAws });
+const response = await http.fetch("https://www.example.test/docs/x?a=1", { redirect: "manual" });
+
+// Then the apex redirect the CloudFront Function performs has been applied.
+expect(response.status).toBe(301);
+expect(response.headers.get("location")).toBe("https://example.test/docs/x?a=1");
+```
+
+A hostname simulated Route 53 answers for is requested by its own name, with no port to add and no
+`localUrl(...)` adapting (an `https` URL works with no certificate set up for it). That one request
+resolves the hostname, finds the Distribution its alias records point at, and runs the deployed
+CloudFront Function at viewer-request. The certificate, the Hosted Zone records, the Distribution's
+aliases and the function are covered together. A template assertion over the same stack passes with
+every Route 53 record missing.
+
+Reach for `serveSimAws` when the request comes from outside the process, such as a browser, `curl`
+or an SDK client pointed at a local endpoint. Both go through the same routing and service code, and
+`SimAwsHttp` leaves parallel test files no port to collide over. See
+[the serving docs](https://yulinsim.dev/serve/) for the API.
 
 ## Match service errors by name
 
