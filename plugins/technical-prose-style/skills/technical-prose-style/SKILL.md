@@ -3,7 +3,7 @@ name: technical-prose-style
 description: Write documentation, READMEs, code comments, commit messages, release notes and PR text as plain technical prose, by removing the constructions that make unedited LLM prose tiring to read. It targets significance tails, contrastive definition, negation framing, appositive tails, colon explainers and a vocabulary that keeps renaming the same thing. Ships a script that scores prose against Django, Go, Rust and Python documentation. Use when writing or editing docs, a README, a changelog, a blog post or any prose for human readers, when asked to improve, tighten or rewrite writing, when prose "sounds like AI" or "sounds like Claude", and when reviewing documentation in a pull request.
 license: Apache-2.0
 metadata:
-  version: "1.15.0"
+  version: "1.17.0"
 ---
 
 # Technical prose style

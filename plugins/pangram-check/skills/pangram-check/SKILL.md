@@ -4,7 +4,7 @@ description: Send the prose of a finished document to Pangram, a commercial AI-t
 license: Apache-2.0
 compatibility: Needs a Pangram API key and network access. Every run is billed.
 metadata:
-  version: "1.15.0"
+  version: "1.17.0"
 disable-model-invocation: true
 ---
 
