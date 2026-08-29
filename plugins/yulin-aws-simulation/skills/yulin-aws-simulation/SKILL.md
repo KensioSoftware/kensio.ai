@@ -1,6 +1,6 @@
 ---
 name: yulin-aws-simulation
-description: Use the @kensio/yulin in-process AWS simulator well when testing AWS code, using it directly rather than building a harness around it, driving tests, local dev and production from one synthesized CDK template, deploying a whole cdk.out cloud assembly, intercepting SDK clients with SimSdk, driving HTTP requests into the simulation with SimAwsHttp, controlling simulated time, matching service errors by name, and handling properties Yulin refuses to simulate. Use when writing or reviewing tests that touch AWS, when replacing aws-sdk-client-mock or hand-rolled AWS stubs, when a CDK stack needs testing, when a CloudFront Distribution, its DNS records or its certificate need testing, when test setup around Yulin is growing helper classes or wrapper functions, and when Yulin refuses a template property or an SDK command.
+description: Use the @kensio/yulin in-process AWS simulator well when testing AWS code, using it directly rather than building a harness around it, driving tests, local dev and production from the templates a CDK app already synthesizes, deploying one of them or a whole cdk.out cloud assembly, binding real handlers to the functions a template declares, intercepting SDK clients with SimSdk, driving HTTP requests into the simulation with SimAwsHttp, controlling simulated time, reading back the names CloudFormation generates, matching service errors by name, and handling properties Yulin refuses to simulate. Use when writing or reviewing tests that touch AWS, when replacing aws-sdk-client-mock or hand-rolled AWS stubs, when a CDK stack needs testing, when a CloudFront Distribution, its DNS records or its certificate need testing, when test setup around Yulin is growing helper classes or wrapper functions, and when Yulin refuses a template property or an SDK command.
 license: Apache-2.0
 metadata:
   version: "1.16.0"
@@ -32,15 +32,16 @@ side effects, no network, no cleanup and no awaiting. Service accessors take the
 objects the SDK does. `using simSdk = new SimSdk()` is the teardown, `deployTemplateFile` is the
 environment, and a simulation per test is close to free.
 
-So a test constructs, deploys if a template is involved, intercepts, exercises, then asserts by
-reading the simulation back. A wrapper around any of those steps hides the one thing the reader
-needs to see. A repeated sequence can be a small function in the same file returning the simulation
-objects themselves. Once it wants a class, an options interface or a directory, it has become a
-second product.
+A test constructs, deploys if a template is involved, intercepts, exercises, then reads the
+simulation back. A wrapper around any of those steps hides what the reader needs to see. A repeated
+sequence can be a small function in the same file returning the simulation objects themselves. Once
+it wants a class, an options interface or a directory, it has become a second product.
 
-## One synthesized template, for tests, local dev and production
+## One CDK app behind the tests, local dev and production
 
-Describe the infrastructure once in CDK and let the synthesized output drive all three:
+Describe the infrastructure once in CDK and let the synthesized output drive all three. Deploy the
+template files `cdk synth` wrote, one of them or all of them, and talk to the simulation the way
+production talks to AWS.
 
 ```typescript
 const stack = await simAws.region("eu-west-2").cloudFormation().deployTemplateFile({
@@ -51,10 +52,9 @@ const stack = await simAws.region("eu-west-2").cloudFormation().deployTemplateFi
 await stack.waitForDeployComplete();
 ```
 
-A test written against a hand-written template only tests the hand-written template, and a dev
-environment building its own buckets is a third description whose drift shows up as a bug
-reproducing in exactly one of the three places. So infrastructure belongs in the CDK app even when
-only a test needs it.
+A hand-written template only tests itself, and a dev environment building its own buckets is a third
+description whose drift shows up as a bug reproducing in one place of the three. Infrastructure
+belongs in the CDK app even when only a test needs it.
 
 **Do not hand-roll a wrapper that reads the file and calls `deployTemplate`.** `deployTemplateFile`
 locates the cloud assembly beside the file, and that is how staged CDK assets resolve. A wrapper
@@ -76,14 +76,32 @@ await simAws.cloudFormation().deployTemplateFile({
 });
 ```
 
-Together they retire the derived template file a dev server used to write into `cdk.out` so that it
-had something to watch. The watched file is the one CDK wrote, and the adaptation re-applies on
-every read.
+The watched file is the one CDK wrote, and the adaptation re-applies on every read.
 
 `stack.output("SiteBucketName")` answers a resolved Output narrowed to a string, throwing on one the
-template never declared. Do not hand-roll that reader. And note that a failed `cdk synth` leaves the
-previous template in `cdk.out` with the tests still passing against it, so check the synthesized
-JSON changed before concluding anything from a construct change.
+template never declared. Do not hand-roll that reader. A failed `cdk synth` leaves the previous
+template in `cdk.out` with the tests still passing against it, so check the synthesized JSON changed
+before concluding anything from a construct change.
+
+### Read a generated name back, never write one out
+
+A Resource whose template leaves its name out is named `<stack name>-<logical ID>-<tail>`, as an
+account names one. The tail is twelve lowercase hex characters derived from the other two parts,
+standing in for the twelve random ones real CloudFormation appends. Where the two parts overrun the
+service's limit, thirteen characters of it go to the tail and its hyphen and the rest is shared
+between them (a 64 character limit leaves 25 each). The trimmed stack name is what an IAM policy
+scoped by resource prefix matches, and a deploy Role allowed an action on `MyVeryLongStackName-*` is
+refused here as an account refuses it.
+
+The same template under the same stack name generates the same name every time. That is the one
+property tempting a test to write the name out. Read it back instead, from a `Ref`, from an
+`Fn::GetAtt` attribute or from the accessor of the service holding it.
+[Names CloudFormation generates](https://yulinsim.dev/services/cloudformation/#names-cloudformation-generates)
+covers the tail and the trimming.
+
+An ECS container binding has no way round this. The family CloudFormation generates for an unnamed
+task definition ends in a tail only a deployment reveals. Name the task definition Resource with the
+`logicalId` binding form.
 
 ### Register what the app looks up, deploy what the app creates
 
@@ -93,12 +111,11 @@ simulated resource carrying it comes from. Yulin stands one up at a chosen id wi
 `simAws.acm().registerCertificate({ arn, domainName })`,
 `simAws.cognitoIdentityProvider().registerUserPool({ id, name })` and `registerUserPoolClient`.
 
-A registration creates a resource in place of the app creating one, and that is what decides when to
-use it. It suits `HostedZone.fromLookup` or a certificate issued by hand outside the app. A resource
-some stack in the same app creates wants deploying, since a registration would mean configuring it
-by hand and taking its configuration from somewhere other than the deployed template. So register
-what the app looks up, deploy what the app creates, and substitute in a `transform` only where a
-deployed resource cannot be given the id its template names.
+A registration creates a resource in place of the app creating one. It suits `HostedZone.fromLookup`
+or a certificate issued by hand outside the app. A resource some stack in the same app creates wants
+deploying instead, since a registration takes its configuration from somewhere other than the
+deployed template. Substitute in a `transform` only where a deployed resource cannot be given the id
+its template names.
 
 Route 53 needs least of this. An `AWS::Route53::RecordSet` naming a hosted zone id no zone holds
 gets one registered under that id as the record is created, taking its name from the records naming
@@ -128,9 +145,9 @@ const stacks = await simAws.cloudFormation().deployCdkOut({
 `stackNames` picks part of an assembly, which most apps need, since most also synthesize a
 deployment pipeline. `stackOptions` carries the `bindings`, `parameters` and `transform` that
 `deployTemplateFile` takes for one template, keyed the same way. Its transform is handed the Stacks
-the same call has already deployed. A Stack consuming a sibling's value therefore stays inside one
-call. Two Stacks passing a plain string between them declare no dependency for the manifest to
-carry, and the order they are named in is what puts the value there in time.
+the same call already deployed, so a Stack consuming a sibling's value stays inside one call. Two
+Stacks passing a plain string between them declare no dependency for the manifest to carry, and
+their order in `stackNames` is what puts the value there in time.
 
 ## Intercept real SDK clients, never hand-roll stubs
 
@@ -166,14 +183,10 @@ reachable as `simSdk.simAws`, and `new SimSdk({ simAws })` shares an existing on
 
 A fake S3 client stubbing `send` with canned `ListObjectsV2` pages, asserted on through the
 continuation tokens it recorded, passes for code that built its command without a `Bucket`.
-Simulated S3 does the pagination for real. `Prefix`, `MaxKeys`, `ContinuationToken` and `StartAfter`
-all apply, `IsTruncated` and `NextContinuationToken` come back as the service sends them, and
+Simulated S3 paginates for real, down to the ETag a real multipart upload produces, and
 `configureMaxKeysPerPage` lowers the page size so that a bucket of two objects makes a caller walk a
-continuation. Uploading real parts gives the object the real `<md5-of-the-part-md5s>-<count>` ETag.
-
-The residue is small. A couple of answers the service never sends (a truncated page naming no
-continuation token) can only come from a fake, and a test reaching for one should say so in a
-comment.
+continuation. The residue is small, and a test reaching for a fake to get an answer the service
+never sends should say so in a comment.
 
 ## Freeze the clock and advance it deliberately
 
@@ -189,13 +202,13 @@ const simAws = new SimAws({
 await simAws.clock().advanceBy({ minutes: 20 });
 ```
 
-Time-dependent behaviour then becomes something a test asserts on in microseconds. A good deal of
-the simulation keys off that clock. EventBridge rules and Scheduler schedules fire only when time is
-advanced past them, DynamoDB items pass their TTL, Secrets Manager deletions come due, `AssumeRole`
-sessions expire, Lambda event source mappings re-poll, and inside a simulated Lambda `Date.now()`
-and `new Date()` report simulated time. So the clock stub `isolated-testing-style` allows is
-unnecessary here, since advancing this one exercises the real expiry rules of the services around it
-as well as the code's own arithmetic.
+Time-dependent behaviour then becomes something a test asserts on in microseconds, and a good deal
+of the simulation keys off that clock. EventBridge rules and Scheduler schedules fire only when time
+is advanced past them, DynamoDB items pass their TTL, Secrets Manager deletions come due,
+`AssumeRole` sessions expire, Lambda event source mappings re-poll, and inside a simulated Lambda
+`Date.now()` and `new Date()` report simulated time. The clock stub `isolated-testing-style` allows
+is unnecessary here, since advancing this one exercises the real expiry rules of the services around
+it as well as the code's own arithmetic.
 
 `simAws.clock().resume()` tracks the underlying clock and `simAws.clock().isFrozen` reports the
 mode. Running mode suits a local dev server, and a test usually wants an advance.
@@ -213,11 +226,11 @@ A call-count assertion holds only for today's implementation. A state assertion 
 handler is rewritten, and it fails if the call was made in a way the real service would have
 rejected.
 
-The accessors sit on more than one scope, with `simAws.region(name)` carrying some of the services
-and `simAws.region(name).account()` carrying all of them (`logs()` among the ones only the account
-scope has), so look on the other scope before concluding a service is missing. Each also takes a
-plain `{ input: { ... } }` in place of a Command object. An assertion can therefore read a service
-back without adding an `@aws-sdk/client-*` package the production code has no use for.
+The accessors sit on more than one scope. `simAws.region(name)` carries some of the services and
+`simAws.region(name).account()` carries all of them (`logs()` among the account-only ones), so look
+on the other scope before concluding a service is missing. Each also takes a plain
+`{ input: { ... } }` in place of a Command object. An assertion can then read a service back without
+adding an `@aws-sdk/client-*` package the production code has no use for.
 
 ## Drive requests into the simulation
 
@@ -238,11 +251,11 @@ A hostname simulated Route 53 answers for is requested by its own name, with no 
 `localUrl(...)` adapting (an `https` URL works with no certificate set up for it). That one request
 resolves the hostname, finds the Distribution its alias records point at, and runs the deployed
 CloudFront Function at viewer-request. The certificate, the Hosted Zone records, the Distribution's
-aliases and the function are covered together. A template assertion over the same stack passes with
-every Route 53 record missing.
+aliases and the function are covered together, where a template assertion over the same stack passes
+with every Route 53 record missing.
 
-Reach for `serveSimAws` when the request comes from outside the process, such as a browser, `curl`
-or an SDK client pointed at a local endpoint. Both go through the same routing and service code, and
+Reach for `serveSimAws` when the request comes from outside the process (a browser, `curl`, an SDK
+client pointed at a local endpoint). Both go through the same routing and service code, and
 `SimAwsHttp` leaves parallel test files no port to collide over. See
 [the serving docs](https://yulinsim.dev/serve/) for the API.
 
@@ -257,9 +270,9 @@ if (error instanceof Error && error.name === "ResourceNotFoundException") { ... 
 ```
 
 The SDK exports exception classes, which invites the `instanceof` check. It holds only while exactly
-one copy of the SDK package is in play. Two copies in the module graph, a bundler, or a simulator
-raising its own classes, and it silently stops matching. Yulin's errors carry the service's real
-error names and SDK-shaped `$metadata` without being instances of the SDK classes. Fix it in
+one copy of the SDK package is in play, and two copies in the module graph, a bundler, or a
+simulator raising its own classes all stop it matching silently. Yulin's errors carry the service's
+real error names and SDK-shaped `$metadata` without being instances of the SDK classes. Fix it in
 production code, where a version skew between two `@aws-sdk/client-*` packages breaks `instanceof`
 too. `name` is what the wire carries, and is right in both places.
 
@@ -283,13 +296,12 @@ workaround has to be maintained in every project that hits the same gap.
 
 The asymmetry matters more than the volume. A simulator staying silent about something costs little,
 leaving that behaviour uncovered where it already was. A simulator saying 200 where production says
-403 turns a deploy-time failure into a production one, the opposite of what it is for. So report a
-false pass with what production does and what the simulation did, and a false refusal with the
-property and the template that carries it. Raise a gap costing nothing but convenience as well, once
-it is forcing structural duplication.
+403 is the opposite of what it is for. So report a false pass with what production does and what the
+simulation did, and a false refusal with the property and the template that carries it. Raise a gap
+costing nothing but convenience as well, once it is forcing structural duplication.
 
 A workaround kept while the issue is open wants a comment naming that issue and a revisit when it
-closes. Re-read the claims in your own comments on each upgrade. They are the ones nothing tests.
+closes. Re-read those claims on each upgrade. They are the ones nothing tests.
 
 ## Deploy expensive context once per test file
 
@@ -314,16 +326,18 @@ it("stores an upload", async () => {
 });
 ```
 
-A template deployment is the only thing usually worth hoisting, and in `beforeEach` it pays for the
+A template deployment is the only thing usually worth hoisting. In `beforeEach` it pays for the
 whole stack once per test for no isolation you did not already have. The `SimSdk`, a seeded row and
-a bucket key belong inside the test that needs them. A `beforeEach` assembling state for tests that
-do not all want the same state is the beginning of the harness this skill opens by arguing against.
+a bucket key belong inside the test that needs them, and a `beforeEach` assembling state for tests
+that do not all want the same state is the harness this skill opens by arguing against.
 
-## Run the handler as a real simulated Lambda
+## Bind a handler and run it as a real simulated Lambda
 
-Yulin can run an in-process handler as a function inside the simulation. Bind it to a template
-function at deploy time with `bindings`, targeting the function by `logicalId`, `functionName`,
-`arn`, `cdkPath` or `imageRepository`:
+`bindings` is how to run your own code inside the simulation, for an `AWS::CloudFront::Function` as
+much as for a Lambda function. Bind an in-process handler at deploy time, targeting a Lambda
+function by `logicalId`, `functionName`, `arn`, `cdkPath` or `imageRepository`, and a CloudFront
+Function by `logicalId`, `functionName` or `arn`. On a CloudFront Function it is what covers source
+`cdk synth` embedded or transformed.
 
 ```typescript
 await simAws.cloudFormation().deployTemplateFile({
@@ -358,10 +372,10 @@ accessors. A recording logger was the last reason standing, and from 1.17.1 a bo
 is recorded into its log group, read back at `/aws/lambda/<function name>` through
 `FilterLogEvents`.
 
-The console and the process standard streams are both bridged for the length of an invocation, in
-the way `process.env` and `Date` are. A logging library building its own `Console` over those
-streams at module scope is recorded too, Powertools' `Logger` included, both its JSON log line and
-its EMF metric document.
+The console and the process standard streams are bridged for the length of an invocation, as
+`process.env` and `Date` are. A logging library building its own `Console` over those streams at
+module scope is recorded too, Powertools' `Logger` included, both its JSON log line and its EMF
+metric document.
 
 So when a test builds the application's own graph, ask what it cannot get through an invocation.
 Expect the answer to be nothing.
@@ -370,27 +384,30 @@ Expect the answer to be nothing.
 
 A bound handler gets the function's declared environment variables with nothing stubbed.
 `SimProcessEnvironment` holds a run's variables in an `AsyncLocalStorage` store and resolves
-`process.env` to it for the length of the run, with concurrent runs each seeing their own. The one
-thing it cannot reach is a read that already happened. A handler module doing
+`process.env` to it for the length of the run, with concurrent runs each seeing their own. What it
+cannot reach is a read that already happened. A handler module doing
 `const TABLE = process.env.TABLE_NAME` at module scope is evaluated when the test file imports it,
 long before any run, and captures the host value.
 
 So read the environment inside the handler body, memoising there where a warm container should build
-its clients once. The substituted `Date` works the same way. A `vi.stubEnv` around a bound handler
-is the sign of a handler reading too early. `SimLambdaEnvironmentConflicts` warns about this, but
-only where the host value and the declared value differ, and a suite that stubs the right values
-stays quiet and never learns.
+its clients once. The substituted `Date` works the same way, and a `vi.stubEnv` around a bound
+handler is the sign of a handler reading too early. `SimLambdaEnvironmentConflicts` warns about
+this, but only where the host value and the declared value differ, and a suite that stubs the right
+values stays quiet and never learns.
 
-### What a binding buys, and what the zip path buys
+### Keep the zip path for a case about the artefact
 
-Deploying without `bindings` runs the bundle `cdk synth` produced. `deployTemplateFile` publishes
-the cloud assembly's assets into the staging bucket in simulated S3, and the modules are evaluated
-as CommonJS in a vm sandbox with its own `process.env`, `Date` and HTTP clients, where the
-module-scope problem above never arises. Both paths authorise through the execution role, and the
-same policy mutation fails a zip-path test exactly as it fails a bound one.
+Deploying a Lambda function without `bindings` runs the bundle `cdk synth` produced.
+`deployTemplateFile` publishes the cloud assembly's assets into the staging bucket in simulated S3,
+and the modules are evaluated as CommonJS in a vm sandbox with its own `process.env`, `Date` and
+HTTP clients, where the module-scope problem above never arises. Both paths authorise through the
+execution role, and the same policy mutation fails a zip-path test exactly as it fails a bound one.
 
-- **A binding** keeps a breakpoint working and lets the handler close over test state.
-- **The zip path** exercises the artefact that deploys, its imports and its bundling included.
+What that buys is the artefact that deploys, its imports and its bundling included, and a case about
+the bundle itself is the case to spend it on. Everywhere else it is the fallback. Every run waits on
+the build, a stale `cdk.out` runs yesterday's handler, and the vm runtime loads CommonJS as the real
+`nodejs` runtimes do, leaving a `NodejsFunction` synthesized with `format: OutputFormat.ESM` refused
+at cold start.
 
 ### Outbound HTTP is answered by the simulation
 
@@ -398,7 +415,7 @@ From 1.16.2, a simulated Lambda's `fetch` and its `node:http` and `node:https` a
 simulation for every hostname simulated Route 53 resolves, through the same in-process entry point a
 request arriving on localhost uses. A Cognito user pool domain, an HTTP API and a load balancer are
 all answered without the test knowing which of them it asked, and everything else reaches the
-network as it was addressed. This is what makes an OAuth authorization code exchange testable, since
-that exchange lives only at the pool domain's hosted `/oauth2/token` endpoint with no SDK operation
-behind it. The same routing lets `CognitoJwtVerifier` fetch a simulated pool's JWKS from inside a
-handler with no cache primed.
+network as addressed. That is what makes an OAuth authorization code exchange testable, since it
+lives only at the pool domain's hosted `/oauth2/token` endpoint with no SDK operation behind it, and
+it lets `CognitoJwtVerifier` fetch a simulated pool's JWKS from inside a handler with no cache
+primed.

@@ -38,10 +38,10 @@ Unzip it into `.agents/skills/` and it is installed.
 
 ## What it covers
 
-**Deploy your real synthesized template.** Deploy the JSON CDK produced, with
-`deployTemplateFile({ templatePath, stackName })`. A construct change that breaks the system breaks
-the test. Do not hand-roll a wrapper that reads the file and calls `deployTemplate`: the file path
-is how Yulin finds the cloud assembly beside it. A wrapper loses staged CDK assets. `transform`
+**Deploy your real synthesized templates.** Deploy the JSON CDK produced, one template or several,
+with `deployTemplateFile({ templatePath, stackName })`. A construct change that breaks the system
+breaks the test. Do not hand-roll a wrapper that reads the file and calls `deployTemplate`: the file
+path is how Yulin finds the cloud assembly beside it. A wrapper loses staged CDK assets. `transform`
 handles what a simulation cannot resolve, such as an ARN carrying a real account or a hosted zone ID
 from a CDK lookup, and `watch` re-applies the file on change for dev servers. `deployCdkOut` deploys
 a whole cloud assembly, each Stack into the region its own environment names.
