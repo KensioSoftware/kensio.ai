@@ -1,6 +1,6 @@
 {
   "name": "@kensio/skills",
-  "version": "1.16.0",
+  "version": "1.18.0",
   "description": "Install Kensio agent skills into any agent that reads SKILL.md.",
   "keywords": [
     "agent-skills",

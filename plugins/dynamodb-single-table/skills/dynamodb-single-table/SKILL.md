@@ -3,7 +3,7 @@ name: dynamodb-single-table
 description: Model data in Amazon DynamoDB as one table by default, reading the current AWS guidance before committing to a schema, writing the access patterns down before any keys exist, holding every entity type in one table, overloading generic partition and sort keys across those types, overloading and sparsifying secondary indexes, and splitting items by write rate. Use when designing or reviewing a DynamoDB schema, when a CDK stack is about to gain a second table, when an entity needs a query it has no key for, when application code fetches from two tables to assemble one response, when a Scan or a filter expression appears, when a partition runs hot or a write throttles, and when asked how to model users, orders, events or tenants in DynamoDB.
 license: Apache-2.0
 metadata:
-  version: "1.16.0"
+  version: "1.18.0"
 ---
 
 # Single-table design in DynamoDB

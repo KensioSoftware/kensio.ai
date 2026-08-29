@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "dynamodb-single-table",
-  "version": "1.16.0",
+  "version": "1.18.0",
   "description": "Data modelling for Amazon DynamoDB, starting from one table.",
   "author": {
     "name": "Kensio Software",
