@@ -91,9 +91,13 @@ authorised a Lambda function URL invocation against `lambda:InvokeFunctionUrl` a
 CloudFront origin access control also needs `lambda:InvokeFunction`. The tests passed, the release
 went out, and the endpoint 403'd in production.
 
-**Deploy expensive context once per test file.** Vitest gives each file its own worker. A stack
-deployed in `beforeAll` is already isolated between files. Isolation inside the file comes from
-randomised names.
+**Share one simulation across the whole test suite.** Create one `SimAws`, deploy the application
+once and install one `SimSdk` interception layer in Vitest setup. Run the suite in one shared worker
+and module context. Tests use random resource names and identifiers while the simulated AWS state
+stays alive, in the same way they would use an AWS account or a LocalStack container. This should be
+the majority of the suite. Put tests that advance or change the shared simulation clock in a smaller
+isolated group, with a fresh Yulin setup for each test. Per-test and per-file simulations are
+supported for these exceptional cases.
 
 **Run the handler as a real simulated Lambda.** Bind an in-process handler to a template function
 and invoke the function through simulated Lambda. Its SDK calls are then routed into the simulation

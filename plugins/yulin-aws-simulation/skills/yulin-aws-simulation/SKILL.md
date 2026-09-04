@@ -1,6 +1,6 @@
 ---
 name: yulin-aws-simulation
-description: Use the @kensio/yulin in-process AWS simulator well when testing AWS code, using it directly rather than building a harness around it, driving tests, local dev and production from the templates a CDK app already synthesizes, deploying one of them or a whole cdk.out cloud assembly, binding real handlers to the functions a template declares, intercepting SDK clients with SimSdk, driving HTTP requests into the simulation with SimAwsHttp, controlling simulated time, reading back the names CloudFormation generates, matching service errors by name, and handling properties Yulin refuses to simulate. Use when writing or reviewing tests that touch AWS, when replacing aws-sdk-client-mock or hand-rolled AWS stubs, when a CDK stack needs testing, when a CloudFront Distribution, its DNS records or its certificate need testing, when test setup around Yulin is growing helper classes or wrapper functions, and when Yulin refuses a template property or an SDK command.
+description: Use the @kensio/yulin in-process AWS simulator well when testing AWS code. Share one simulation and SDK interception layer across tests that leave simulated time alone, and isolate the minority that change the clock. Use Yulin directly, deploy CDK-synthesized templates, bind real handlers, intercept SDK clients, drive HTTP with SimAwsHttp, control time, read generated names, match service errors by name, and handle unsupported properties. Use when writing or reviewing tests that touch AWS, replacing SDK stubs, testing CDK stacks or CloudFront resources, simplifying Yulin test setup, or diagnosing unsupported templates and commands.
 license: Apache-2.0
 metadata:
   version: "1.18.0"
@@ -12,6 +12,13 @@ metadata:
 network and no AWS account. This skill is how to use it well. It serves `isolated-testing-style`,
 the general argument for simulation over stubs. Each rule says what it buys, and a case that does
 not want that trade can go the other way knowingly.
+
+Treat Yulin as suite infrastructure, in the same way tests treat an AWS account or a LocalStack
+container. Create one simulation, deploy the application once and install SDK interception once in
+the Vitest suite setup. Every test talks to that shared environment. Randomised resource names and
+identifiers keep tests independent while the simulated AWS state remains alive for the whole suite.
+This is the default for tests that leave the simulation clock alone. Put the smaller set of tests
+that change simulated time in an isolated group, with their own Yulin setup.
 
 For the API read `node_modules/@kensio/yulin/llms.txt`. It indexes the 45 markdown pages beside it
 under `node_modules/@kensio/yulin/docs/`, one per simulated service and per feature guide,
@@ -29,13 +36,13 @@ service, or a `beforeEach` that reassembles the world.
 
 Yulin is built to be used directly. `new SimAws()` and `new SimSdk()` are plain constructors with no
 side effects, no network, no cleanup and no awaiting. Service accessors take the same Command
-objects the SDK does. `using simSdk = new SimSdk()` is the teardown, `deployTemplateFile` is the
-environment, and a simulation per test is close to free.
+objects the SDK does. The suite setup creates these objects once. `deployTemplateFile` is the
+environment, and the tests import the shared simulation objects directly.
 
-A test constructs, deploys if a template is involved, intercepts, exercises, then reads the
-simulation back. A wrapper around any of those steps hides what the reader needs to see. A repeated
-sequence can be a small function in the same file returning the simulation objects themselves. Once
-it wants a class, an options interface or a directory, it has become a second product.
+The setup constructs, deploys and intercepts. A test exercises the application and reads the shared
+simulation back. A wrapper around any of those steps hides what the reader needs to see. The setup
+can be a small module returning the simulation objects themselves. Once it wants a class, an options
+interface or a directory, it has become a second product.
 
 ## One CDK app behind the tests, local dev and production
 
@@ -51,6 +58,9 @@ const stack = await simAws.region("eu-west-2").cloudFormation().deployTemplateFi
 
 await stack.waitForDeployComplete();
 ```
+
+The test suite deploys this template once during its shared Yulin setup. Individual tests use the
+deployed resources and do not deploy their own copies.
 
 A hand-written template only tests itself, and a dev environment building its own buckets is a third
 description whose drift shows up as a bug reproducing in one place of the three. Infrastructure
@@ -155,7 +165,7 @@ their order in `stackNames` is what puts the value there in time.
 from the simulation, and the code under test uses the SDK exactly as it does in production.
 
 ```typescript
-using simSdk = new SimSdk();
+const simSdk = new SimSdk({ simAws });
 simSdk.intercept(SecretsManagerClient); // Every instance, including ones made later.
 ```
 
@@ -164,20 +174,22 @@ correctly. A stub has no naming rules and verifies no signatures. A malformed Se
 or a wrongly computed Cognito `SECRET_HASH` passes it and fails in production.
 
 Intercept the class in most cases, since the code under test usually constructs its own clients.
-Intercept an instance when a single client should reach the simulation, and when a file's cases each
-build their own `SimAws`. A class interception is process-wide (it shadows `send` on the class
-prototype) and refuses a second install while the first is live, with
-`SimSdkAlreadyInterceptedError`. An instance interception goes when the instance does.
+Install that class interception once in the suite setup. A class interception is process-wide (it
+shadows `send` on the class prototype) and refuses a second install while the first is live, with
+`SimSdkAlreadyInterceptedError`. Repeated interception in `beforeEach` or in each test file is both
+unnecessary and an error when those files share a worker. Intercept an instance only when one
+specific client should reach Yulin.
 
 Whichever it is, it has to be the client the code actually calls. A `DynamoDBDocumentClient` built
 over a `DynamoDBClient` is what the code sends through, and the document client is the one to
 intercept. Every Command routes to the simulation by default, and an allow list of Command classes
 narrows that where something else should handle the rest.
 
-`SimSdk` and its interception handles are disposable, so `using` restores every intercepted client
-at the end of the scope, leaving nothing for a later test to inherit when the one before it threw.
-`simSdk.restoreAll()` and `interception.restore()` do it by hand. Each `SimSdk` owns a `SimAws`,
-reachable as `simSdk.simAws`, and `new SimSdk({ simAws })` shares an existing one.
+Keep the suite's `SimSdk` alive for as long as the suite. Worker exit normally removes its
+process-wide patches. Call `simSdk.restoreAll()` if the process will continue doing other work.
+`using simSdk = new SimSdk()` and `interception.restore()` remain useful for a deliberately
+short-lived simulation. Each `SimSdk` owns a `SimAws`, reachable as `simSdk.simAws`, and
+`new SimSdk({ simAws })` shares an existing one.
 
 ### A fake accepts any request the simulator would refuse
 
@@ -213,6 +225,19 @@ it as well as the code's own arithmetic.
 `simAws.clock().resume()` tracks the underlying clock and `simAws.clock().isFrozen` reports the
 mode. Running mode suits a local dev server, and a test usually wants an advance.
 
+### Give clock-changing tests their own simulation
+
+The clock is part of a `SimAws` instance's state. Tests sharing that instance also share its current
+time and whether it is frozen or running. One test advancing or resuming the clock therefore changes
+the environment underneath every other test in that group. Randomised resource names cannot isolate
+this change.
+
+Most tests should use the suite simulation without changing its clock. Put tests that advance the
+clock or change its mode in a separate Vitest project or file group. Give each of those tests a
+fresh `SimAws`, deployment and interception layer. Each test can then control time without affecting
+another test. A small group may share one isolated simulation when its cases deliberately follow the
+same timeline.
+
 ## Assert by reading the simulation back
 
 The simulation holds real state. After exercising the code, ask the service what happened:
@@ -224,7 +249,8 @@ const object = await simAws.s3().getObject(new GetObjectCommand({ Bucket: bucket
 
 A call-count assertion holds only for today's implementation. A state assertion holds however the
 handler is rewritten, and it fails if the call was made in a way the real service would have
-rejected.
+rejected. In the shared suite environment, read the resource named by the test's random identifier.
+Do not list the whole service and assume no other test has left state there.
 
 The accessors sit on more than one scope. `simAws.region(name)` carries some of the services and
 `simAws.region(name).account()` carries all of them (`logs()` among the account-only ones), so look
@@ -303,33 +329,86 @@ costing nothing but convenience as well, once it is forcing structural duplicati
 A workaround kept while the issue is open wants a comment naming that issue and a revisit when it
 closes. Re-read those claims on each upgrade. They are the ones nothing tests.
 
-## Deploy expensive context once per test file
+## Share one simulation across the whole test suite
 
-Vitest gives each test file its own worker, so module-level state is already isolated between files.
-Deploy a stack once for the file and let the tests share it. Isolation inside the file comes from
-randomised names.
+The recommended lifecycle is one `SimAws`, one deployment and one `SimSdk` interception layer for
+the tests that do not change simulated time. This should be most of the test suite. Do this in
+Vitest setup. Tests should treat the result as a long-running AWS account or LocalStack container
+whose state survives every test and test file.
+
+An in-process simulation needs the test files to share a worker and module cache. Set
+`fileParallelism: false` and `isolate: false`, then load one setup module through `setupFiles`:
 
 ```typescript
-let simAws: SimAws;
+// vitest.config.ts
+export default defineConfig({
+  test: {
+    fileParallelism: false,
+    isolate: false,
+    setupFiles: ["./test/yulin.setup.ts"],
+  },
+});
+```
 
-beforeAll(async () => {
-  simAws = new SimAws();
+Keep the one-time work in an imported module. Vitest executes a setup file before each test file,
+even with isolation disabled, but imported modules stay cached in the shared worker.
+
+```typescript
+// test/yulin-suite.ts
+const ready = (async () => {
+  const simAws = new SimAws();
+  const simSdk = new SimSdk({ simAws });
+
+  simSdk.intercept(DynamoDBClient);
+  simSdk.intercept(S3Client);
+
   const stack = await simAws.cloudFormation().deployTemplateFile({
     templatePath: "cdk.out/SiteStack.template.json",
   });
   await stack.waitForDeployComplete();
-});
 
-it("stores an upload", async () => {
-  // Given a key no other test in this file is using.
-  const key = `uploads/${faker.string.uuid()}.png`;
-});
+  return { simAws, simSdk, stack };
+})();
+
+export function yulinSuite() {
+  return ready;
+}
 ```
 
-A template deployment is the only thing usually worth hoisting. In `beforeEach` it pays for the
-whole stack once per test for no isolation you did not already have. The `SimSdk`, a seeded row and
-a bucket key belong inside the test that needs them, and a `beforeEach` assembling state for tests
-that do not all want the same state is the harness this skill opens by arguing against.
+```typescript
+// test/yulin.setup.ts
+import { yulinSuite } from "./yulin-suite";
+
+await yulinSuite();
+```
+
+Tests import `yulinSuite()` and work against that same state. Give every test data a random name or
+identifier, query by that identifier and never assume a service starts empty. A missing-resource
+case uses a new identifier that no test created. A count assertion records the relevant count before
+the action when it cannot query by identifier. Tests remain independent without clearing tables,
+buckets or queues between them.
+
+```typescript
+const { simAws } = await yulinSuite();
+const key = `uploads/${faker.string.uuid()}.png`;
+
+// Exercise the application, then read this test's object from shared S3 state.
+const object = await simAws.s3().getObject({ input: { Bucket: bucket, Key: key } });
+```
+
+Do not put the simulation in Vitest `globalSetup`. That hook runs outside the test workers and can
+only pass serializable values into them. `setupFiles` runs in the test worker and can share the live
+`SimAws` object through the cached module above.
+
+This shared setup also shares the simulation clock. Keep tests that call `advanceBy`, resume the
+clock or otherwise change simulated time out of this group. Put them in a separate Vitest project or
+file pattern, such as `*.clock.iso.test.ts`, and give each test an isolated Yulin setup. The split
+keeps the common suite setup cheap while allowing the smaller clock-testing group to control time.
+
+Creating Yulin once per test or once per file is supported. Reserve it for a case that deliberately
+tests an entire fresh account, an independent clock or incompatible interception. Use the shared
+setup by default. A `beforeEach` or file-level `beforeAll` that deploys the application again
+usually turns random test data into repeated infrastructure work.
 
 ## Bind a handler and run it as a real simulated Lambda
 
