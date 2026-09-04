@@ -1,6 +1,6 @@
 {
   "name": "@kensio/isolated-testing-style",
-  "version": "1.18.0",
+  "version": "1.18.1",
   "description": "An opinionated testing style built on simulated collaborators and randomised data.",
   "keywords": [
     "agent-skills",

@@ -3,7 +3,7 @@ name: yulin-aws-simulation
 description: Use the @kensio/yulin in-process AWS simulator well when testing AWS code. Share one simulation and SDK interception layer across tests that leave simulated time alone, and isolate the minority that change the clock. Use Yulin directly, deploy CDK-synthesized templates, bind real handlers, intercept SDK clients, drive HTTP with SimAwsHttp, control time, read generated names, match service errors by name, and handle unsupported properties. Use when writing or reviewing tests that touch AWS, replacing SDK stubs, testing CDK stacks or CloudFront resources, simplifying Yulin test setup, or diagnosing unsupported templates and commands.
 license: Apache-2.0
 metadata:
-  version: "1.18.0"
+  version: "1.18.1"
 ---
 
 # Testing with Yulin

@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "skill-template",
-  "version": "1.18.0",
+  "version": "1.18.1",
   "description": "A copy-and-edit starting point for a new agent skill.",
   "author": {
     "name": "Kensio Software",

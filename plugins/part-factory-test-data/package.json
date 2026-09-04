@@ -1,6 +1,6 @@
 {
   "name": "@kensio/part-factory-test-data",
-  "version": "1.18.0",
+  "version": "1.18.1",
   "description": "How to build typed test data with @kensio/part-factory factories.",
   "keywords": [
     "agent-skills",

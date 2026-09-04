@@ -1,6 +1,6 @@
 {
   "name": "@kensio/pangram-check",
-  "version": "1.18.0",
+  "version": "1.18.1",
   "description": "Check finished writing against the Pangram AI-text detector.",
   "keywords": [
     "agent-skills",
