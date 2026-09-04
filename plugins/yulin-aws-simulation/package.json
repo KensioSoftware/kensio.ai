@@ -1,6 +1,6 @@
 {
   "name": "@kensio/yulin-aws-simulation",
-  "version": "1.18.0",
+  "version": "1.18.1",
   "description": "How to test AWS code well with the @kensio/yulin in-process simulator.",
   "keywords": [
     "agent-skills",
