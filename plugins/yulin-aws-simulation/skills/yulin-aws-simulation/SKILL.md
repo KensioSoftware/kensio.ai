@@ -498,3 +498,26 @@ network as addressed. That is what makes an OAuth authorization code exchange te
 lives only at the pool domain's hosted `/oauth2/token` endpoint with no SDK operation behind it, and
 it lets `CognitoJwtVerifier` fetch a simulated pool's JWKS from inside a handler with no cache
 primed.
+
+### Change an event source mapping only in an isolated setup
+
+An event source mapping reports `Creating` until the simulation's background work has run, as a real
+one does for its first few seconds. After Yulin 1.23.2, `UpdateEventSourceMapping` refuses a mapping
+in that state with `ResourceInUseException`, as Lambda does. Call
+`await simAws.backgroundTasksComplete()` between creating a mapping and updating it.
+
+Disabling a mapping leaves records on its source, and enabling it again delivers them. In the shared
+suite a disabled mapping stops delivery for every other test that sends to its source. Give a test
+that disables, re-enables or re-batches a mapping an isolated setup, the way a clock-changing test
+gets one.
+
+### Tags and listings are checked as deployed
+
+After Yulin 1.23.2, creating a function with `Tags` needs `lambda:TagResource` as well as
+`lambda:CreateFunction`, the same as on AWS. A tagged stack deployed by a caller whose policy leaves
+`lambda:TagResource` out fails in the simulation at the point the account would fail it.
+`GetFunction` reports the tags only to a caller allowed `lambda:ListTags`.
+
+`ListFunctions` answers with at most 50 functions, and the other Lambda listings page by their own
+documented limits. Code reading a listing has to follow `NextMarker`. A test seeding more functions
+than one page holds shows whether it does.
